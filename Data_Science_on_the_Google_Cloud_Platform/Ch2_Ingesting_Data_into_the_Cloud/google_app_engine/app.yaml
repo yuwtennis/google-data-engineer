@@ -1,0 +1,32 @@
+#
+# General Settings
+#
+runtime: python
+env: flex
+
+# MODULENAME: ingestapp.py , VARIABLENAME (WSGI callable object): app
+entrypoint: gunicorn -b :$PORT ingestapp:app --timeout 120
+service: default
+
+# Python version is specified to prevent ambiguity
+runtime_config:
+    python_version: 3
+
+manual_scaling:
+    instances: 1
+
+#
+# Environment variables
+#
+
+# [START env]
+env_variables:
+    CLOUD_STORAGE_BUCKET: elite-caster-125113
+# [END env]
+
+#
+# Handler element
+#
+#handlers:
+#-  url: /.*
+#   script: ingestapp.app
