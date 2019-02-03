@@ -1,7 +1,7 @@
 cron:
 - description: ingest monthly flight data
   url: /ingest
-  schedule: 26 of month 18:00
+  schedule: 3 of month 18:30
   timezone: Asia/Tokyo
   target: flights
   retry_parameters:

@@ -13,6 +13,7 @@ from flask import Flask
 import flask
 import ingest_flights
 import logging
+import os
 
 app = Flask(__name__)
 
@@ -28,14 +29,14 @@ def ingest_next_month():
         logging.info('Received cron request {}'.format(is_cron))
 
         # CLOUD_STORAGE_BUCKET will be defined in app.yaml
-        bucket = CLOUD_STORAGE_BUCKET
+        bucket = os.environ['CLOUD_STORAGE_BUCKET']
 
         # Runtime environment variable from google app engine
-        project = GOOGLE_CLOUD_PROJECT
+        project = os.environ['GOOGLE_CLOUD_PROJECT']
 
         year, month = ingest_flights.next_month( bucket, project )
 
-        gcsfile = ingest( year, month, bucket, project )
+        gcsfile = ingest_flights.ingest( year, month, bucket, project )
 
         status = "Successfully ingested {}".format(gcsfile)
     except KeyError as e:

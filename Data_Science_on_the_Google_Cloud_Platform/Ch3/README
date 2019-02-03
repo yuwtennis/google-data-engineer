@@ -1,0 +1,6 @@
+gcloud sql instances create flights --region asia-northeast1 --tier db-n1-standard-1 --activation-policy always
+
+gcloud sql instances patch flights --authorized-networks $gateway_ip
+
+gcloud sql instances describe flights --format='value(ipAddresses.ipAddress)'
+
