@@ -1,6 +1,12 @@
-gcloud sql instances create flights --region asia-northeast1 --tier db-n1-standard-1 --activation-policy always
+# Import data
+mysqlimport --local --host MYSQLHOST --ignore-lines=1 --fields-terminated-by="," --user root --password bts flights.csv-0
 
-gcloud sql instances patch flights --authorized-networks $gateway_ip
+# Create cloud sql instance
+gcloud sql instances create flights --region asia-northeast1 --tier db-n1-standard-1 --activation-policy always --database-version MYSQL_5_7
 
+# Authorize network from the gateway
+gateway_ip=`curl https://ipecho.net/plain -s`; gcloud sql instances patch flights --authorized-networks $gateway_ip
+
+# Retrieve the cloud sql instance ip address
 gcloud sql instances describe flights --format='value(ipAddresses.ipAddress)'
 
