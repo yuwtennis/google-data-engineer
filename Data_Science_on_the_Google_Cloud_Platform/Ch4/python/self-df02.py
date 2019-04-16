@@ -10,6 +10,8 @@
 # This script will parse fields from csv file downloaded from below site.
 # https://www.transtats.bts.gov/TableInfo.asp
 
+import argparse
+import sys
 import csv
 import apache_beam as beam
 from apache_beam.io.textio import ReadFromText
@@ -29,17 +31,10 @@ def format(s):
 
     return "word: {0} count: {1}".format(word.encode('utf-8'), count)
 
-def run_pipeline(in_file, out_file):
+def run_pipeline(known_args, pipeline_args):
     # Simple process for apache beam pipeline
     # This code will run the pipeline in GCP DataFlow 
-    # Options required to run pipeline in data flow is below
-    # https://beam.apache.org/documentation/runners/dataflow/
-    options = PipelineOptions()
-    google_cloud_options = options.view_as(GoogleCloudOptions)
-    google_cloud_options.project = 'elite-caster-125113'
-    google_cloud_options.job_name = 'parse-airport-location'
-    google_cloud_options.staging_location = 'gs://elite-caster-125113/dataflow/staging'
-    google_cloud_options.temp_location = 'gs://elite-caster-125113/dataflow/temp'     
+    options = PipelineOptions(pipeline_args)
     options.view_as(SetupOptions).save_main_session = True
 
     with beam.Pipeline(runner='DataFlowRunner', options=options) as p:
@@ -52,7 +47,7 @@ def run_pipeline(in_file, out_file):
         # skip_header_lines: First line will be skipped. Set to "1".
 
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.ReadFromText
-        collections = p | ReadFromText( file_pattern=in_file, skip_header_lines=1 )
+        collections = p | ReadFromText( file_pattern=known_args.input, skip_header_lines=1 )
 
         #
         # Pipeline(n): Detailed Transformation
@@ -73,14 +68,22 @@ def run_pipeline(in_file, out_file):
         (
             airports 
             | beam.Map(lambda (airport,data): "{0},{1}".format(airport,','.join(data)))
-            | WriteToText( file_path_prefix = out_file )
+            | WriteToText( file_path_prefix = known_args.output )
         )
 
 def main():
-    in_file = "gs://elite-caster-125113/dataflow/in/89598257_T_MASTER_CORD.csv"
-    out_file = "gs://elite-caster-125113/dataflow/out/airport.csv"
+    # Setting required arguments for data flow
+    # https://cloud.google.com/dataflow/docs/guides/specifying-exec-params
 
-    run_pipeline(in_file, out_file)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input')
+    parser.add_argument('--output')
+
+    # Options required to run pipeline in data flow is below
+    # https://beam.apache.org/documentation/runners/dataflow/
+    known_args, pipeline_args = parser.parse_known_args(sys.argv[1:])
+
+    run_pipeline(known_args, pipeline_args)
 
 if __name__ == "__main__":
     main()
