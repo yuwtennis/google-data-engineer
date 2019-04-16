@@ -39,6 +39,9 @@ def addtimezone(lat, lon):
         # the coordinates were out of bounds
         return (lat, lon, 'TIMEZONE')
 
+def tz_correct(line, airport_timezones):
+    return
+
 def format(s):
     ( word, count ) = s
 
