@@ -10,6 +10,7 @@
 # 1. This script will parse fields from csv file downloaded from below site.
 # https://www.transtats.bts.gov/TableInfo.asp
 # 2. Parse lat and lon and find the location
+# 3. Using [2], convert the dep/arr time to UTC time
 
 import csv
 import apache_beam as beam
@@ -59,13 +60,14 @@ def run_pipeline(in_file, out_file):
 
         #
         # Pipeline(n): Detailed Transformation
+        # Final PCollection will be used as side input for the date time convertion in the next transformation
         # 1. Parse each line and return fields as a list. Use csv module to remove any double quotes inside field
         # 2. Filter out invalid fields
         # 3. Just get "AIRPORT_SEQ_ID"(0),"LATITUDE"(21),"LONGITUDE"(26). Also add timezone for correspondng coordinates
         #
         airports = (
                        collections
-                       | 'Extract' >> beam.Map( lambda x: next(csv.reader([x],delimiter=',')))
+                       | 'Extract' >> beam.Map(lambda x: next(csv.reader([x],delimiter=',')))
                        | 'Filter' >> beam.Filter( lambda x: x[21] and x[26] )
                        | 'Timezone' >> beam.Map(lambda x: (x[0], addtimezone(x[21],x[26])))
                    )
