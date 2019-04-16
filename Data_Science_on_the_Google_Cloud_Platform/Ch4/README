@@ -1,5 +1,12 @@
+### python
 1. self-df01.py
   Sample code for executing pipeline in DirectRunner mode
 
 2. self-df02.py
   Sample code for executing pipeline in DataFlow mode
+
+  Usage:
+  python self-df02.py --input=gs://[DIR]/89598257_T_MASTER_CORD.csv --output=gs://[DIR]/airport.csv --project=[PROJECTID] --job_name=[JOB NAME] --staging_location=gs://[Staging directory] --temp_location=gs://[Temporary directory]
+
+3. self-df0333y
+  Sample code for executing pipeline in DirectRunner mode
