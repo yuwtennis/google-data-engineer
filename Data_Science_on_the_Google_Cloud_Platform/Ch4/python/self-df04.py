@@ -2,6 +2,7 @@
 #
 # Self study code built for Data Science on the Google Cloud Platform Ch 4
 # apache beam documentation
+# Source code is written to execute on DataFlow.
 # https://beam.apache.org/documentation/programming-guide/#pipeline-io
 #
 # Reference guide
@@ -11,12 +12,6 @@
 # https://www.transtats.bts.gov/TableInfo.asp
 # 2. Parse lat and lon and find the location
 # 3. Using [2], pipeline will convert the dep/arr time to UTC time
-
-class PrintFn(beam.DoFn):
-    def process(self, element):
-        # Just print
-        print element
-        return
 
 def addtimezone(lat, lon):
     # Code is based on sample on below page
@@ -36,11 +31,33 @@ def addtimezone(lat, lon):
         return (lat, lon, 'TIMEZONE')
 
 def as_utc(date, hhmm, tzone):
-    if len(hhmm) and tzone is no None:  
-        # Import modules at this level instead globally
-        import datetime, pytz
+    try:
+        if len(hhmm) and tzone is not None:  
+            # Due to nature of data flow import modules at this level instead globally
+            import datetime, pytz
 
-    return
+            # Prepare pytz instance using the timezone info
+            loc_tz = pytz.timezone(tzone)
+
+            # From the pytz instance create datetime instance parsing the input date.
+            # "is_dst" is set false since it is not dealing with Daylight Saving Time
+            loc_dt = loc_tz.localize(datetime.datetime.strptime(date, "%Y-%m-%d"), is_dst=False)
+
+            # loc_dt will have 00:00:00 (set timezone). We will need to fastforward the hour and minutes.
+            loc_dt += datetime.timedelta(hours=int(hhmm[:2]),
+                                     minutes=int(hhmm[2:]))
+
+            # Finally convert the time to utc
+            utc_dt = loc_dt.astimezone(pytz.utc)
+
+            return utc_dt.strftime("%Y-%m-%d %H:%M:%S")
+        else:   
+            return '' # empty strings corresponds to canceld flights
+    except ValueError as e:
+        # If something is wrong ,ValueError will be raised from "datetime.datetiem.strptime"
+        print '{}.{}.{}'.format(date, hhmm, tzone)
+
+        raise e
 
 def tz_correct(line, airport_timezones):
     # This function will find the timezone of that airport and convert it into UTC
@@ -65,7 +82,7 @@ def tz_correct(line, airport_timezones):
            fields[f] = as_utc( fields[0], fields[f], dep_timezone) # FL_DATE, f, timezone
 
     # Use python generator instead of returning list(iterable) to save memory
-    yield ',".join(fields)
+    yield ','.join(fields)
 
 def format(s):
     ( word, count ) = s
@@ -74,6 +91,7 @@ def format(s):
 
 def run_pipeline(in_file, out_file):
     import csv
+
     import apache_beam as beam
     from apache_beam.io.textio import ReadFromText
     from apache_beam.io.textio import WriteToText
@@ -89,10 +107,10 @@ def run_pipeline(in_file, out_file):
         # skip_header_lines: First line will be skipped. Set to "1".
 
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.ReadFromText
-        collections = p | ReadFromText( file_pattern=in_file, skip_header_lines=1 )
+        collections = p | 'ReadAiportInfo' >> ReadFromText( file_pattern=in_file[0], skip_header_lines=1 )
 
         #
-        # Pipeline(n): Detailed Transformation
+        # Pipeline(1): Create side input
         # Final PCollection will be used as side input for the date time convertion in the next transformation
         # 1. Parse each line and return fields as a list. Use csv module to remove any double quotes inside field
         # 2. Filter out invalid fields
@@ -100,26 +118,38 @@ def run_pipeline(in_file, out_file):
         #
         airports = (
                        collections
-                       | 'Extract' >> beam.Map(lambda x: next(csv.reader([x],delimiter=',')))
-                       | 'Filter' >> beam.Filter( lambda x: x[21] and x[26] )
-                       | 'Timezone' >> beam.Map(lambda x: (x[0], addtimezone(x[21],x[26])))
+                       | 'airports:Extract' >> beam.Map(lambda x: next(csv.reader([x],delimiter=',')))
+                       | 'airports:Filter' >> beam.Filter( lambda x: x[21] and x[26] )
+                       | 'airports:Timezone' >> beam.Map(lambda x: (x[0], addtimezone(x[21],x[26])))
                    )
 
+        #
+        # Pipeline(2): Correct timezone
+        # 1. Read flight data
+        flights = ( 
+                   p | 'ReadOnTimeReport' >> ReadFromText( file_pattern=in_file[1], skip_header_lines=1)
+                   | 'flights:tzcorr' >> beam.FlatMap(tz_correct, beam.pvalue.AsDict(airports))
+                  )
         #
         # Pipeline(Final)
         #
         # Write results to a file. Tuples are unpacked while function call.
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
         (
-            airports 
-            | beam.Map(lambda (airport,data): "{0},{1}".format(airport,','.join(data)))
+            flights 
             | WriteToText( file_path_prefix = out_file )
         )
 
 def main():
-    in_file = "./89598257_T_MASTER_CORD.csv"
-    out_file = "/tmp/airport.csv"
+    import os
 
+    data_dir = os.getcwd() + '/../data'
+    in_file = [
+                  "{}/{}".format(data_dir, "89598257_T_MASTER_CORD.csv"),
+                  "{}/{}".format(data_dir, "201903_part.csv")
+              ]
+
+    out_file = "/tmp/airport.csv"
     run_pipeline(in_file, out_file)
 
 if __name__ == "__main__":
