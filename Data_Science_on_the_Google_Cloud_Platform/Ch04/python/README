@@ -1,4 +1,18 @@
-### python
+## python
+### Python module version used
+```
+$ python -V
+Python 2.7.15`
+```
+
+```
+$ pip freeze | egrep "beam|timezone|pytz|python"
+apache-beam==2.11.0
+pytz==2019.1
+timezonefinder==1.5.4
+```
+
+### CODES
 1. self-df01.py
   Sample code for executing pipeline in DirectRunner mode
 

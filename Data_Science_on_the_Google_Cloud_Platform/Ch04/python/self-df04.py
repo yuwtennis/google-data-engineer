@@ -1,4 +1,13 @@
 #!/usr/bin/env
+'''
+File name: self-df04.py
+Author: Yu Watanabe
+Date created: Apr 13, 2019
+Date last modified: Jan 20, 2019
+Python Version Used: 2.7.15
+Description: Takes flight data and corrects the local date time to UTC timezone
+'''
+
 #
 # Self study code built for Data Science on the Google Cloud Platform Ch 4
 # apache beam documentation
