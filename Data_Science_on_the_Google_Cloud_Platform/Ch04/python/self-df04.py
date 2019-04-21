@@ -39,6 +39,17 @@ def addtimezone(lat, lon):
         # the coordinates were out of bounds
         return (lat, lon, 'TIMEZONE')
 
+def add_24h_if_before(deptime, arrtime):
+    import datetime
+
+    if deptime > 0 and arrtime > 0 and arrtime < deptime:
+        adt = datetime.datetime.strptime( arrtime, '%Y-%m-%d %H:%M:%S'")
+        adt += datetime.timedelta(hours=24)
+        return adt.strftime('%Y-%m-%d %H:%M:%S')
+
+    else:
+        return  arrtime
+
 def as_utc(date, hhmm, tzone):
     try:
         if len(hhmm) and tzone is not None:  
@@ -88,7 +99,7 @@ def tz_correct(line, airport_timezones):
            fields[f] = as_utc( fields[0], fields[f], dep_timezone) # FL_DATE, f, timezone
 
        for f in [18, 20, 21]: # WHEELS_ON, CRS_ARR_TIME, ARR_TIME
-           fields[f] = as_utc( fields[0], fields[f], dep_timezone) # FL_DATE, f, timezone
+           fields[f] =ad as_utc( fields[0], fields[f], arr_timezone) # FL_DATE, f, timezone
 
     # Use python generator instead of returning list(iterable) to save memory
     yield ','.join(fields)
@@ -100,10 +111,14 @@ def format(s):
 
 def run_pipeline(in_file, out_file):
     import csv
+    import logging
 
     import apache_beam as beam
     from apache_beam.io.textio import ReadFromText
     from apache_beam.io.textio import WriteToText
+
+    # Start logging
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
     # Simple process for apache beam pipeline
     with beam.Pipeline(runner='DirectRunner') as p:
@@ -135,6 +150,7 @@ def run_pipeline(in_file, out_file):
         #
         # Pipeline(2): Correct timezone
         # 1. Read flight data
+        # 2. Convert times into UTC
         flights = ( 
                    p | 'ReadOnTimeReport' >> ReadFromText( file_pattern=in_file[1], skip_header_lines=1)
                    | 'flights:tzcorr' >> beam.FlatMap(tz_correct, beam.pvalue.AsDict(airports))
