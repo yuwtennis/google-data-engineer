@@ -39,11 +39,11 @@ def addtimezone(lat, lon):
         # the coordinates were out of bounds
         return (lat, lon, 'TIMEZONE')
 
-def add_24h_if_before(deptime, arrtime):
+def add_24h_if_before(arrtime, deptime):
     import datetime
 
     if deptime > 0 and arrtime > 0 and arrtime < deptime:
-        adt = datetime.datetime.strptime( arrtime, '%Y-%m-%d %H:%M:%S'")
+        adt = datetime.datetime.strptime( arrtime, '%Y-%m-%d %H:%M:%S')
         adt += datetime.timedelta(hours=24)
         return adt.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -70,9 +70,9 @@ def as_utc(date, hhmm, tzone):
             # Finally convert the time to utc
             utc_dt = loc_dt.astimezone(pytz.utc)
 
-            return utc_dt.strftime("%Y-%m-%d %H:%M:%S")
+            return utc_dt.strftime("%Y-%m-%d %H:%M:%S"), loc_dt.utcoffset().total_seconds()
         else:   
-            return '' # empty strings corresponds to canceld flights
+            return '', 0 # empty strings corresponds to canceled flights
     except ValueError as e:
         # If something is wrong ,ValueError will be raised from "datetime.datetiem.strptime"
         print '{}.{}.{}'.format(date, hhmm, tzone)
@@ -96,29 +96,69 @@ def tz_correct(line, airport_timezones):
 
        # Convert all times to UTC and replace the original lines
        for f in [13, 14, 17]: # CRS_DEP_TIME, DEP_TIME, WHEELS_OFF 
-           fields[f] = as_utc( fields[0], fields[f], dep_timezone) # FL_DATE, f, timezone
+           fields[f], deptz = as_utc( fields[0], fields[f], dep_timezone) # FL_DATE, f, timezone
 
        for f in [18, 20, 21]: # WHEELS_ON, CRS_ARR_TIME, ARR_TIME
-           fields[f] =ad as_utc( fields[0], fields[f], arr_timezone) # FL_DATE, f, timezone
+           fields[f], arrtz = as_utc( fields[0], fields[f], arr_timezone) # FL_DATE, f, timezone
 
-    # Use python generator instead of returning list(iterable) to save memory
-    yield ','.join(fields)
+       # Fast forward the arrival time if the departure time is later than arrival time
+       for f in [17, 18, 20, 21]:
+           fields[f] = add_24h_if_before( fields[f], fields[14]) # arrival time , departure time
+
+       # Add the timezone of departure and arrival airport 
+       fields.extend(airport_timezones[dep_airport_id])
+       fields[-1]=str(deptz)
+       fields.extend(airport_timezones[arr_airport_id])
+       fields[-1]=str(arrtz)
+
+       # Use python generator instead of returning list(iterable) to save memory
+       yield ','.join(fields)
+
+def get_next_event(fields):
+    # Generate departed events
+    if len(fields[14]) > 0:
+        # Fields in original list must not be modified!
+        event=fields.split(',') 
+
+        # Departure event will have string "departed"
+        event.extend(["departed"])
+
+        # Null out the events that are not available at departure time
+        # Unavailable events at departure time are:
+        # 16. TAXI_OUT
+        # 17. WHEELS_OFF
+        # 18. WHEELS_ON
+        # 19. TAXI_IN
+        # 21. ARR_TIME
+        # 22. ARR_DELAY
+        # 25. DIVERTED
+        for f in [16,17,18,19,21,22,25]:
+            event[f]=''
+
+        # First yield. Up to this line will be executed when this function is called.
+        yield ','.join(event)
+
+    # Generate arrived events
+    if len(fields[21]) > 0:
+        event=fields.split(',')
+
+        # Arrived event will have string "arrived"
+        event.extend(["arrived"])
+
+        # Second yield. This generator will be called after the first generator is processed.
+        yield ','.join(event)
 
 def format(s):
     ( word, count ) = s
 
     return "word: {0} count: {1}".format(word.encode('utf-8'), count)
 
-def run_pipeline(in_file, out_file):
+def run_pipeline(in_file):
     import csv
-    import logging
 
     import apache_beam as beam
     from apache_beam.io.textio import ReadFromText
     from apache_beam.io.textio import WriteToText
-
-    # Start logging
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
     # Simple process for apache beam pipeline
     with beam.Pipeline(runner='DirectRunner') as p:
@@ -152,18 +192,24 @@ def run_pipeline(in_file, out_file):
         # 1. Read flight data
         # 2. Convert times into UTC
         flights = ( 
-                   p | 'ReadOnTimeReport' >> ReadFromText( file_pattern=in_file[1], skip_header_lines=1)
-                   | 'flights:tzcorr' >> beam.FlatMap(tz_correct, beam.pvalue.AsDict(airports))
+                   p | 'flights:read' >> ReadFromText( file_pattern=in_file[1], skip_header_lines=1)
+                     | 'flights:tzcorr' >> beam.FlatMap(tz_correct, beam.pvalue.AsDict(airports))
                   )
+
+        # Write results to a file. Tuples are unpacked while function call.
+        # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
+        ( flights | 'flights:out' >> WriteToText( file_path_prefix = 'flights' ) )
+
+        # Pipeline(3): Generate departed and arrived events
+        # 1. 
+        events = flights | '' >> beam.FlatMap(get_next_event)
+
         #
         # Pipeline(Final)
         #
         # Write results to a file. Tuples are unpacked while function call.
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
-        (
-            flights 
-            | WriteToText( file_path_prefix = out_file )
-        )
+        ( events | 'event:out' >> WriteToText( file_path_prefix = 'events' ) )
 
 def main():
     import os
@@ -174,8 +220,7 @@ def main():
                   "{}/{}".format(data_dir, "201903_part.csv")
               ]
 
-    out_file = "/tmp/airport.csv"
-    run_pipeline(in_file, out_file)
+    run_pipeline(in_file)
 
 if __name__ == "__main__":
     main()
