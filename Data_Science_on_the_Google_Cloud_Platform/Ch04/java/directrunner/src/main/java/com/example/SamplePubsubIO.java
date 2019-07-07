@@ -6,13 +6,26 @@ import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptors;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
 import org.apache.beam.sdk.transforms.windowing.AfterWatermark;
 import org.apache.beam.sdk.transforms.windowing.FixedWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.vendor.guava.v20_0.com.google.common.collect.ImmutableList;
+
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.bigquery.model.TableSchema;
+import com.google.api.services.bigquery.model.TableRow;
+import com.google.api.services.bigquery.model.TableFieldSchema;
+
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.CommandLine;
@@ -21,14 +34,19 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import java.lang.RuntimeException;
+
 import org.joda.time.Duration;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.Instant;
 
 import java.util.List;
 import java.util.Arrays;
 import java.util.Date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * This class will read events from PubSub and insert into BigQuery
@@ -36,21 +54,24 @@ import java.util.Date;
 
 public class SamplePubsubIO
 {
-    /* 
-     * Par Do Function
-     * Adds processing timestamp to input string.
-     * Incoming: String
-     * Output: String, String
-    */
-    static class TimeStampFn extends SimpleFunction<String, List<String>> {
-        @Override
-        public List<String> apply(String msg) {
-            // Generate Timestamp
-            DateTime dt = new DateTime();
-            DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            String tm = fmt.print(dt);
+    // Inner class
+    // Used for "container" for dataset from PubSub
+    @DefaultCoder(AvroCoder.class)
+    static class PubsubData {
+        private final String msg;
 
-            return Arrays.asList(msg, tm);
+        // Default constructor
+        public PubsubData() {
+            this.msg = "";
+        }
+
+        // Constructor
+        public PubsubData( String msg ) {
+            this.msg = msg;
+        }
+
+        public String getMsg() {
+            return this.msg;
         }
     }
 
@@ -75,51 +96,90 @@ public class SamplePubsubIO
         // Prepare pipeline
         System.out.println("Pipeline start!");
         System.out.printf("File out: %s , Subscription: %s\n",
-                            subscription, outfile);
+                            outfile, subscription);
 
         /*
          * BigQuery parameters
-        */
-        String tableSpec = "samples.sample_table";
+         */
+        // Prepare fully qualified reference to big query table
+        TableReference tableSpec = new TableReference()
+                                       .setProjectId("elite-caster-125113")
+                                       .setDatasetId("samples") 
+                                       .setTableId("sample_table");
+        // Prepare Field schema
+        TableSchema tableSchema  = new TableSchema()
+                                       .setFields(
+                                           ImmutableList.of(
+                                               new TableFieldSchema().setName("message")
+                                                                     .setType("STRING")
+                                                                     .setMode("NULLABLE")
+                                           )
+                                       );
 
         Pipeline p = prepPipeline();
 
         // Read lines from Pubsub
-        PCollection col =  p.apply(PubsubIO.readStrings().fromSubscription(subscription))
-             /*
-             * https://beam.apache.org/releases/javadoc/2.12.0/
-             * On the other hand, if we wanted to get early results every minute
-             * of processing time (for which there were new elements in the given
-             * window) we could do the following:
-             */
-             .apply(Window.<String>into(FixedWindows.of(
-                        Duration.standardMinutes(1)))
-                            .triggering(
-                                AfterWatermark.pastEndOfWindow()
-                                    .withEarlyFirings(AfterProcessingTime
-                                    .pastFirstElementInPane()
-                                    .plusDelayOf(Duration.standardMinutes(1))))
-                            .discardingFiredPanes()
-                            .withAllowedLateness(Duration.ZERO))
-             .apply(MapElements.via(new TimeStampFn()));
-
-        // Write data to a file
-        col.apply(TextIO.write()
-                   .to(outfile)
-                   .withWindowedWrites()
-                   .withNumShards(1));
-
         /*
-        col.apply(
-                MapElemnents.into(TypeDescriptor.of(TableRow.class))
-           )
-           .apply(BigQueryIO.writeTableRows()
-                            .withMethod(STREAMING_INSERTS)
-                            .to(tableSpec)
-                            .withCreateDisposition(CreateDisposition.CREATE_NEVER)
-                            .withWriteDisposition(WriteDisposition.WRITE_APPEND)
-                 );
+         * https://beam.apache.org/releases/javadoc/2.12.0/
+         * On the other hand, if we wanted to get early results every minute
+         * of processing time (for which there were new elements in the given
+         * window) we could do the following:
         */
+        PCollection<PubsubData> col =  p.apply(PubsubIO.readStrings().fromSubscription(subscription))
+                            .apply(Window.<String>into(FixedWindows.of(Duration.standardMinutes(1)))
+                                         .triggering(
+                                             AfterWatermark.pastEndOfWindow()
+                                                           .withEarlyFirings(
+                                                               AfterProcessingTime
+                                                                   .pastFirstElementInPane()
+                                                                   .plusDelayOf(Duration.standardMinutes(1))
+                                                           )
+                                         )
+                                         .discardingFiredPanes()
+                                         .withAllowedLateness(Duration.ZERO))
+                            .apply( MapElements.via (
+                                new SimpleFunction<String, String>() {
+                                    @Override
+                                    public String apply( String line ) {
+                                        // Generate Timestamp
+                                        DateTime dt = new DateTime();
+                                        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+                                        String tm = fmt.print(dt);
+
+                                        // Add a timestamp to beginning of line
+                                        return String.format("%s %s", tm, line);
+                                    }
+                                }
+                            ))
+                            .apply(
+                                MapElements.into(TypeDescriptor.of(PubsubData.class))
+                                           .via( ( String elem ) -> ( new PubsubData(elem) ))
+                            );
+
+        /* Write out to a file*/
+        PCollection<String> out = col.apply(MapElements.into( TypeDescriptors.strings() )
+                                                       .via( (PubsubData elem) -> (elem.getMsg()))
+                                     );
+        // TextIO.Write takes PCollection as input. Thus it cannot defined inside the pipeline.
+        out.apply(TextIO.write()
+                        .to(outfile)
+                        .withWindowedWrites()
+                        .withNumShards(1)
+           );
+
+        /* Write out to BigQuery */
+        /*
+         * Write method based on apache beam 2.12.0 
+         * https://beam.apache.org/releases/javadoc/2.12.0/org/apache/beam/sdk/io/gcp/bigquery/BigQueryIO.html
+        */
+        col.apply(BigQueryIO.<PubsubData>write()
+                            .to(tableSpec)
+                            .withSchema(tableSchema)
+                            .withMethod(BigQueryIO.Write.Method.STREAMING_INSERTS)
+                            .withFormatFunction( elem -> new TableRow().set( "message", elem.getMsg() ) )
+                            .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+                            .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+           );
 
         System.out.println("Running pipline !");
 
