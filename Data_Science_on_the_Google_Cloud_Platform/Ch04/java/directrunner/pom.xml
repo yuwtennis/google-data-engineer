@@ -136,8 +136,6 @@
   <!-- I have just excluded the profile section to build only for direct runner. -->
   <!-- Guide to use the apache beam sample archetype is here -->
   <!-- https://beam.apache.org/get-started/quickstart-java/ -->
-  <!-- Get the WordCount Code -->
-
   <dependencies>
     <dependency>
       <groupId>org.apache.beam</groupId>
