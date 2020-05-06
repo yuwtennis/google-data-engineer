@@ -7,22 +7,36 @@
 # Reference guide
 # https://beam.apache.org/releases/pydoc/2.11.0/
 #
-# This script will parse fields from csv file downloaded from below site.
+# 1. This script will parse fields from csv file downloaded from below site.
 # https://www.transtats.bts.gov/TableInfo.asp
+# 2. Parse lat and lon and find the location
 
 import csv
 import apache_beam as beam
 from apache_beam.io.textio import ReadFromText
 from apache_beam.io.textio import WriteToText
-from apache_beam.options.pipeline_options import PipelineOptions
-from apache_beam.options.pipeline_options import GoogleCloudOptions
-from apache_beam.options.pipeline_options import SetupOptions
 
 class PrintFn(beam.DoFn):
     def process(self, element):
         # Just print
         print element
         return
+
+def addtimezone(lat, lon):
+    # Code is based on sample on below page
+    # https://pypi.org/project/timezonefinder/
+    try:
+        from timezonefinder import TimezoneFinder
+
+        tf = TimezoneFinder()
+        tz = tf.timezone_at(lng=float(lon), lat=float(lat))
+
+        if tz is None:
+            tz = 'UTC'
+        return (lat, lon, tz)
+    except ValueError:
+        # the coordinates were out of bounds
+        return (lat, lon, 'TIMEZONE')
 
 def format(s):
     ( word, count ) = s
@@ -31,18 +45,7 @@ def format(s):
 
 def run_pipeline(in_file, out_file):
     # Simple process for apache beam pipeline
-    # This code will run the pipeline in GCP DataFlow 
-    # Options required to run pipeline in data flow is below
-    # https://beam.apache.org/documentation/runners/dataflow/
-    options = PipelineOptions()
-    google_cloud_options = options.view_as(GoogleCloudOptions)
-    google_cloud_options.project = 'elite-caster-125113'
-    google_cloud_options.job_name = 'parse-airport-location'
-    google_cloud_options.staging_location = 'gs://elite-caster-125113/dataflow/staging'
-    google_cloud_options.temp_location = 'gs://elite-caster-125113/dataflow/temp'     
-    options.view_as(SetupOptions).save_main_session = True
-
-    with beam.Pipeline(runner='DataFlowRunner', options=options) as p:
+    with beam.Pipeline(runner='DirectRunner') as p:
         #
         # Pipeline(0): Data ingestion
         #
@@ -57,12 +60,14 @@ def run_pipeline(in_file, out_file):
         #
         # Pipeline(n): Detailed Transformation
         # 1. Parse each line and return fields as a list. Use csv module to remove any double quotes inside field
-        # 2. Just get "AIRPORT_SEQ_ID"(0),"LATITUDE"(21),"LONGITUDE"(26)
+        # 2. Filter out invalid fields
+        # 3. Just get "AIRPORT_SEQ_ID"(0),"LATITUDE"(21),"LONGITUDE"(26). Also add timezone for correspondng coordinates
         #
         airports = (
                        collections
-                       | 'Extract_Into_Fields' >> beam.Map( lambda x: next(csv.reader([x],delimiter=',')))
-                       | 'Set_Fields' >> beam.Map(lambda x: (x[0],(x[21],x[26])))
+                       | 'Extract' >> beam.Map( lambda x: next(csv.reader([x],delimiter=',')))
+                       | 'Filter' >> beam.Filter( lambda x: x[21] and x[26] )
+                       | 'Timezone' >> beam.Map(lambda x: (x[0], addtimezone(x[21],x[26])))
                    )
 
         #
@@ -77,8 +82,8 @@ def run_pipeline(in_file, out_file):
         )
 
 def main():
-    in_file = "gs://elite-caster-125113/dataflow/in/89598257_T_MASTER_CORD.csv"
-    out_file = "gs://elite-caster-125113/dataflow/out/airport.csv"
+    in_file = "./89598257_T_MASTER_CORD.csv"
+    out_file = "/tmp/airport.csv"
 
     run_pipeline(in_file, out_file)
 

@@ -1,0 +1,4 @@
+pytz==2019.1
+timezonefinder==1.5.4
+google-cloud-bigquery
+google-cloud-pubsub
