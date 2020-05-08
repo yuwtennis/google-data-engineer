@@ -10,3 +10,5 @@ gcloud dataproc clusters create \
   --region=$REGION \
   --initialization-actions=$INSTALL \
   ch6cluster
+
+gcloud dataproc clusters list --region=${REGION}
