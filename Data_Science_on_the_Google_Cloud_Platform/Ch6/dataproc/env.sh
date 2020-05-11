@@ -21,4 +21,6 @@ export INSTALL=gs://dataproc-initialization-actions/datalab/datalab.sh
 #
 # Dataproc variables
 #
-export CLUSTER_NAME=ch6cluster
+export CLUSTER_NAME="ch6cluster"
+export SCHEDULED_CLUSTER=1
+export DURATION="+2hours"
