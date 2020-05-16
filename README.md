@@ -2,7 +2,7 @@
 
 Sets of code I have created while studying below book.
 
-Data Science on the Google Cloud Platform
+Data Science on the Google Cloud Platform  
 http://shop.oreilly.com/product/0636920057628.do
 
 1. Ch02. Ingesting Data into the Cloud
