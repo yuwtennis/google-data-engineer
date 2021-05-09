@@ -1,8 +1,8 @@
 # google-data-engineer
 
-[Overview](#overview)  
-[Instructions](#instructions)  
-  [Chapter6](#chapter-6)
+- [Overview](#overview)  
+- [Instructions](#instructions)  
+  - [Chapter6](#chapter-6)
 
 ## Overview
 
