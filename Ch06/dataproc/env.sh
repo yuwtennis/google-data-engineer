@@ -11,8 +11,8 @@ export PROJECT=`gcloud config get-value core/project`
 # Init script used at beginning of initialization of dataproc cluster
 #
 
-# For datalab initialization provided by google on public gs
-export INSTALL=gs://dataproc-initialization-actions/datalab/datalab.sh
+# DEPRECATED For datalab initialization provided by google on public gs
+#export INSTALL=gs://dataproc-initialization-actions/datalab/datalab.sh
 
 # Some customized user script
 #export INSTALL=gs://${PROJECT}/flights/dataproc/install_on_cluster.sh

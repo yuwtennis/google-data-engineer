@@ -13,7 +13,10 @@ gcloud dataproc clusters create \
   --worker-machine-type=n1-standard-2 \
   --master-machine-type=n1-standard-4 \
   --region=$REGION \
-  --initialization-actions=$INSTALL $OPT_SCHEDULE \
+  --optional-components=JUPYTER \
+  --enable-component-gateway \
+  --image-version=2.0-debian10 \
+  $OPT_SCHEDULE \
   ch6cluster
 
 gcloud dataproc clusters list --region=${REGION}
