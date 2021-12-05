@@ -19,7 +19,6 @@ import tempfile
 import shutil
 import datetime
 from google.cloud import storage
-from google.oauth2 import service_account
 
 
 """
@@ -120,23 +119,17 @@ def upload(csvfile, project, bucketname, blobname):
     # Prepare google cloud storage client
     import json
 
-#    credentials = service_account.Credentials.from_service_account_file(
-#        os.getenv('SERVICE_ACCOUNT_FILE'),
-#        scopes=['https://www.googleapis.com/auth/devstorage.read_write']
-#    )
-#    delegated_credentials = credentials.with_subject(os.getenv('SUBJECT_NAME'))
-#    client = storage.Client(project=project, credentials=delegated_credentials)
     client = storage.Client(project)
 
     # Get bucket name
     bucket = client.get_bucket(bucketname)
 
     # Prepare blob instance. Blob will be relative path to bucket in 
-    # Google cloud storag3
+    # Google cloud storage
     blob = storage.Blob(blobname, bucket)
 
     # Upload to cloud
-    blob.upload_from_filename( csvfile )
+    blob.upload_from_filename(csvfile)
 
     gslocation = "gs://{}/{}".format( bucketname, blobname)
     print("Uploaded {} ...".format(gslocation))
@@ -152,14 +145,21 @@ def upload(csvfile, project, bucketname, blobname):
 def verify_ingest(outfile):
     # This will be the fields which will be compared against 
     # the fields inside a csv file
-    expected_fields="FL_DATE,OP_UNIQUE_CARRIER,OP_CARRIER_AIRLINE_ID,OP_CARRIER,OP_CARRIER_FL_NUM,ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,DEST_AIRPORT_SEQ_ID,DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME,DEP_DELAY,TAXI_OUT,WHEELS_OFF,WHEELS_ON,TAXI_IN,CRS_ARR_TIME,ARR_TIME,ARR_DELAY,CANCELLED,CANCELLATION_CODE,DIVERTED,DISTANCE"
+    expected_fields = "FL_DATE,OP_UNIQUE_CARRIER,OP_CARRIER_AIRLINE_ID," \
+                      "OP_CARRIER,OP_CARRIER_FL_NUM,ORIGIN_AIRPORT_ID," \
+                      "ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID," \
+                      "ORIGIN,DEST_AIRPORT_ID,DEST_AIRPORT_SEQ_ID," \
+                      "DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME," \
+                      "DEP_DELAY,TAXI_OUT,WHEELS_OFF,WHEELS_ON,TAXI_IN," \
+                      "CRS_ARR_TIME,ARR_TIME,ARR_DELAY,CANCELLED," \
+                      "CANCELLATION_CODE,DIVERTED,DISTANCE"
 
     with open(outfile, "r") as outfp:
         # First read the very first line of the target file
         firstline = outfp.readline().strip()
 
-        # First comparision will check the fields are expected one
-        if(firstline != expected_fields):
+        # First comparison will check the fields are expected one
+        if firstline != expected_fields:
             # If the fields are not expected one then raise exception
             msg="Got header={}, but expected={}".format(firstline, 
                                                         expected_fields)
@@ -167,9 +167,9 @@ def verify_ingest(outfile):
             logging.error(msg)
             raise UnexpectedFormat(msg)
 
-        # Next comparision will check the actual data exists 
+        # Next comparison will check the actual data exists
         # by checking 2nd line
-        if( next(outfp, None) == None):
+        if next(outfp, None) is None:
             msg = "Received file from BTS with only header and no contents!"
 
             logging.error(msg)
@@ -183,13 +183,13 @@ def remove_quotes_and_commas(csvfile, year, month):
         outfile = os.path.join( os.path.dirname(csvfile), 
                                 "{}{}.csv".format(year, month))
 
-        with open( csvfile, "r" ) as infp:
-            with open( outfile, "w" ) as outfp:
+        with open(csvfile, "r") as infp:
+            with open( outfile, "w") as outfp:
                 for line in infp:
                     # Right strip the newline then right strip comma 
                     # finally remove all double quotes
                     outline = line.rstrip().rstrip(',')\
-                        .translate( str.maketrans('', '', '"'))
+                        .translate(str.maketrans('', '', '"'))
 
                     outfp.write(outline)
                     outfp.write("\n")
@@ -231,7 +231,7 @@ def zip_to_csv(filename, destdir):
     return csvfile
 
 
-def download( YEAR, MONTH, destdir):
+def download(YEAR, MONTH, destdir):
     """
     This definition will download on-time performance data and returns list of csv files
     """
@@ -251,14 +251,14 @@ def download( YEAR, MONTH, destdir):
     response = urllib.request.urlopen(req, context=ctx)
 
     # Prepare filename to download the csv files
-    filename = os.path.join(destdir, "{}{}.zip".format(YEAR,MONTH))
+    filename = os.path.join(destdir, "{}{}.zip".format(YEAR, MONTH.zfill(2)))
 
     # Download the file
     with open(filename, "wb") as fp:
         fp.write(response.read())
 
     # Check that the downloaded zip file is there
-    print( "ZIP FILE: {}".format( glob.glob(filename)[0] ) )
+    print("ZIP FILE: {}".format( glob.glob(filename)[0]))
 
     return filename
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         description='ingest flights data from BTS website to GCS')
 
     parser.add_argument('--bucket', help='GCS bucket to upload data to.',
-                         required=True)
+                        required=True)
     parser.add_argument('--year',   help='Example: 2015', required=False)
     parser.add_argument('--month',  help='Example: 01', required=False)
     parser.add_argument('--proj',   help='Name of the project', required=True)
@@ -286,6 +286,6 @@ if __name__ == "__main__":
             year = args.year
             month = args.month
 
-        gcsfile = ingest( year, month, args.bucket, args.proj)
+        gcsfile = ingest(year, month, args.bucket, args.proj)
     except DataUnavailable as e:
         print('Try again later: {}'.format(e.message))
