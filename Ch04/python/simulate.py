@@ -105,7 +105,7 @@ ORDER BY NOTIFY_TIME ASC
     # Start time of the notify time of the record. Set using input argument.
     simStartTime = datetime.datetime.strptime( startTime, TIME_FORMAT ).replace(tzinfo=pytz.UTC)
 
-    print 'Simulation start time is {}'.format(simStartTime)
+    print('Simulation start time is {}'.format(simStartTime))
 
     # Create topics in pubsub
     publisher = pubsub_v1.PublisherClient(
