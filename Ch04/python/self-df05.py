@@ -10,6 +10,8 @@ History:
   self-df05.py: Changed the runner from "DirectRunner" to "DataFlowRunner"
 '''
 
+# ToDo Refactor
+
 #
 # Self study code built for Data Science on the Google Cloud Platform Ch 4
 # apache beam documentation
@@ -26,7 +28,6 @@ History:
 
 import csv
 import datetime, pytz
-import os
 import argparse
 import logging
 
@@ -83,7 +84,7 @@ def as_utc(date, hhmm, tzone):
             return '', 0 # empty strings corresponds to canceled flights
     except ValueError as e:
         # If something is wrong ,ValueError will be raised from "datetime.datetiem.strptime"
-        print '{}.{}.{}'.format(date, hhmm, tzone)
+        print('{}.{}.{}'.format(date, hhmm, tzone))
 
         raise e
 
@@ -181,20 +182,11 @@ def run_pipeline(project, bucket, dataset):
       '--runner=DataflowRunner'
     ]
 
-    #param = [
-    #    '--runner=DirectRunner'
-    #]
-
     # All input files are on Google Storage
-    in_file = [
-                 "gs://{0}/flights/sideinput/89598257_T_MASTER_CORD.csv.gz".format(bucket), # List of airports
-                 "gs://{0}/flights/raw/*.csv".format(bucket) # Historical Data
-             ]
+    airports_file_name = "gs://{0}/flights/sideinput/89598257_T_MASTER_CORD.csv.gz".format(bucket), # List of airports
+    flights_raw_file = "gs://{0}/flights/raw/*.csv".format(bucket) # Historical Data
 
-    out_file = [
-                 "gs://{0}/flights/output/flights".format(bucket),
-                 "gs://{0}/flights/output/events".format(bucket)
-             ]
+    flights_output = "gs://{0}/flights/tzcorr/all_flights".format(bucket)
 
     bq_table = '{0}:{1}.simevents'.format(project, dataset)
 
@@ -211,7 +203,7 @@ def run_pipeline(project, bucket, dataset):
         # skip_header_lines: First line will be skipped. Set to "1".
 
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.ReadFromText
-        collections = p | 'airports:read' >> beam.io.textio.ReadFromText(file_pattern=in_file[0], skip_header_lines=1)
+        collections = p | 'airports:read' >> beam.io.textio.ReadFromText(file_pattern=airports_file_name, skip_header_lines=1)
 
         #
         # Pipeline(1): Create side input
@@ -231,7 +223,7 @@ def run_pipeline(project, bucket, dataset):
         # 1. Read flight data
         # 2. Convert times into UTC
         flights = (p
-                      | 'flights:read' >> beam.io.textio.ReadFromText( file_pattern=in_file[1], skip_header_lines=1)
+                      | 'flights:read' >> beam.io.textio.ReadFromText( file_pattern=flights_raw_file, skip_header_lines=1)
                       | 'flights:tzcorr' >> beam.FlatMap(tz_correct, beam.pvalue.AsDict(airports))
                   )
 
@@ -239,7 +231,7 @@ def run_pipeline(project, bucket, dataset):
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
         (flights
             | 'flights:tostring' >> beam.Map(lambda fields: ','.join(fields))
-            | 'flights:out' >> beam.io.textio.WriteToText(file_path_prefix = out_file[0])
+            | 'flights:out' >> beam.io.textio.WriteToText(file_path_prefix=flights_output)
         )
 
         # Pipeline(3): Generate departed and arrived events
@@ -251,7 +243,7 @@ def run_pipeline(project, bucket, dataset):
 
         (events
             | 'events:totablerow' >> beam.Map(lambda fields: create_row(fields))
-            | 'events:bq' >>  beam.io.Write(beam.io.gcp.bigquery.BigQuerySink(
+            | 'events:bq' >> beam.io.Write(beam.io.gcp.bigquery.BigQuerySink(
                                                                        bq_table,      # table
                                                                        schema=schema, # schema
                                                                        write_disposition=beam.io.gcp.bigquery.BigQueryDisposition.WRITE_TRUNCATE,   # BigQuery Disposition
@@ -265,7 +257,7 @@ def run_pipeline(project, bucket, dataset):
         # Write results to a file. Tuples are unpacked while function call.
         # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
         (events
-            | 'flights:fileoutput' >> beam.io.textio.WriteToText(file_path_prefix = out_file[1])
+            | 'flights:fileoutput' >> beam.io.textio.WriteToText(file_path_prefix = events_output)
         )
 
 def main():
