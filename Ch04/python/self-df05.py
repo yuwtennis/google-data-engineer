@@ -249,16 +249,8 @@ def run_pipeline(project, bucket, dataset):
                                                                        write_disposition=beam.io.gcp.bigquery.BigQueryDisposition.WRITE_TRUNCATE,   # BigQuery Disposition
                                                                        create_disposition=beam.io.gcp.bigquery.BigQueryDisposition.CREATE_IF_NEEDED # BigQuery Disposition
                                   ))
-        )
+         )
 
-        #
-        # Pipeline(Final)
-        #
-        # Write results to a file. Tuples are unpacked while function call.
-        # https://beam.apache.org/releases/pydoc/2.11.0/apache_beam.io.textio.html#apache_beam.io.textio.WriteToText
-        (events
-            | 'flights:fileoutput' >> beam.io.textio.WriteToText(file_path_prefix = events_output)
-        )
 
 def main():
     parser = argparse.ArgumentParser()
