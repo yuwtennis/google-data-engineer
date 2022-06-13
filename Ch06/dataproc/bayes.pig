@@ -1,7 +1,6 @@
 REGISTER /usr/lib/pig/piggybank.jar ;
 
-
-FLIGHTS = LOAD 'gs://elite-caster-125113/flights/tzcorr/flights-*'
+FLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
 using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE')
 AS (
 FL_DATE:chararray,
@@ -63,4 +62,4 @@ FLIGHTS2 = FOREACH FLIGHTS GENERATE
 grouped = GROUP FLIGHTS2 BY (distbin, depdelaybin);
 result = FOREACH grouped GENERATE FLATTEN(group) AS (dist, delay), ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double;
 
-STORE result into 'gs://elite-caster-125113/flights/pigoutput/' using PigStorage(',', '-schema');
+STORE result into 'gs://$PROJECT_NAME/flights/pigoutput/' using PigStorage(',', '-schema');
