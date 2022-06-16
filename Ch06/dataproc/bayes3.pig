@@ -1,6 +1,6 @@
 REGISTER /usr/lib/pig/piggybank.jar ;
 
-FLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
+ALLFLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
     using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE')
     AS (
     FL_DATE:chararray,
@@ -39,6 +39,13 @@ FLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
     EVENT:chararray,
     NOTIFY_TIME:datetime) ;
 
+alldays = LOAD 'gs://$PROJECT_NAME/flights/trainday.csv'
+    using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE', 'SKIP_INPUT_HEADER')
+    AS (FL_DATE:chararray, is_train_day:boolean) ;
+traindays = FILTER alldays BY is_train_day == True ;
+
+FLIGHTS = JOIN ALLFLIGHTS BY FL_DATE, traindays BY FL_DATE ;
+
 FLIGHTS2 = FOREACH FLIGHTS GENERATE
 (DISTANCE < 214? 0:
 (DISTANCE < 316? 1:
@@ -60,8 +67,11 @@ FLIGHTS2 = FOREACH FLIGHTS GENERATE
 (DEP_DELAY < 13? 8: 9))))))))) AS depdelaybin:int, (ARR_DELAY < 15? 1:0) AS ontime:int;
 
 grouped = GROUP FLIGHTS2 BY (distbin, depdelaybin);
-result = FOREACH grouped GENERATE
+probs = FOREACH grouped GENERATE
     FLATTEN(group) AS (dist, delay),
+    ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS.ontime) AS ontime:double,
     ((double)SUM(FLIGHTS2.ontime))/COUNT(FLIGHTS2.ontime) AS ontime:double;
+
+result = FILTER probs BY (numflights > 10) AND (ontime < 0.7);
 
 STORE result into 'gs://$PROJECT_NAME/flights/pigoutput/' using PigStorage(',', '-schema');

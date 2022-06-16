@@ -1,6 +1,6 @@
 REGISTER /usr/lib/pig/piggybank.jar ;
 
-FLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
+ALLFLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
     using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE')
     AS (
     FL_DATE:chararray,
@@ -38,6 +38,13 @@ FLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
     ARR_AIRPORT_TZOFFSET:float,
     EVENT:chararray,
     NOTIFY_TIME:datetime) ;
+
+alldays = LOAD 'gs://$PROJECT_NAME/flights/trainday.csv'
+    using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE', 'SKIP_INPUT_HEADER')
+    AS (FL_DATE:chararray, is_train_day:boolean) ;
+traindays = FILTER alldays BY is_train_day == True ;
+
+FLIGHTS = JOIN ALLFLIGHTS BY FL_DATE, traindays BY FL_DATE ;
 
 FLIGHTS2 = FOREACH FLIGHTS GENERATE
 (DISTANCE < 214? 0:
