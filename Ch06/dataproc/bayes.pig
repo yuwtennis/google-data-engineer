@@ -39,7 +39,7 @@ ALLFLIGHTS = LOAD 'gs://$PROJECT_NAME/flights/tzcorr/flights-*'
     EVENT:chararray,
     NOTIFY_TIME:datetime) ;
 
-alldays = LOAD 'gs://$PROJECt_NAME/flights/trainday.csv'
+alldays = LOAD 'gs://$PROJECT_NAME/flights/trainday.csv'
     using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'NO_MULTILINE', 'NOCHANGE', 'SKIP_INPUT_HEADER')
     AS (FL_DATE:chararray, is_train_day:boolean) ;
 traindays = FILTER alldays BY is_train_day == True ;
