@@ -24,3 +24,5 @@ export PROJECT=`gcloud config get-value core/project`
 export CLUSTER_NAME="ch6cluster"
 export SCHEDULED_CLUSTER=1
 export DURATION="+2hours"
+export MASTER_MACHINE_TYPE=n1-standard-2
+export WORKER_MACHINE_TYPE=n1-standard-4
