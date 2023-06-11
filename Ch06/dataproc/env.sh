@@ -24,6 +24,9 @@ export PROJECT=`gcloud config get-value core/project`
 export CLUSTER_NAME="ch6cluster"
 export SCHEDULED_CLUSTER=1
 export DURATION="+2hours"
+
+# Supported machine types
+# https://cloud.google.com/dataproc/docs/concepts/compute/supported-machine-types
 export MASTER_MACHINE_TYPE=e2-medium
 export WORKER_MACHINE_TYPE=e2-medium
 export NUM_OF_WORKERS=2
