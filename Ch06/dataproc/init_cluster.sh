@@ -8,7 +8,7 @@ if [[ $SCHEDULED_CLUSTER ]]; then
 fi
 
 gcloud dataproc clusters create \
-  --num-workers=2 \
+  --num-workers=$NUM_OF_WORKERS \
   --scopes=cloud-platform \
   --worker-machine-type=$WORKER_MACHINE_TYPE \
   --master-machine-type=$MASTER_MACHINE_TYPE \
