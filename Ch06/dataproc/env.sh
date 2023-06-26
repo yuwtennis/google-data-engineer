@@ -27,6 +27,6 @@ export DURATION="+2hours"
 
 # Supported machine types
 # https://cloud.google.com/dataproc/docs/concepts/compute/supported-machine-types
-export MASTER_MACHINE_TYPE=e2-medium
-export WORKER_MACHINE_TYPE=e2-medium
+export MASTER_MACHINE_TYPE=e2-standard-2
+export WORKER_MACHINE_TYPE=e2-standard-4
 export NUM_OF_WORKERS=2
