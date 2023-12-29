@@ -99,6 +99,17 @@ public class Flight {
     }
 
     /**
+     * Retrieves the field value based on the specified field name.
+     *
+     * @param fieldName The name of the field to retrieve.
+     * @return The value of the field.
+     * @throws IllegalArgumentException If the specified field name does not exist.
+     */
+    public String getField(String fieldName) throws IllegalArgumentException{
+        return fields[INPUTCOLS.valueOf(fieldName).ordinal()];
+    }
+
+    /**
      *
      * @return
      */

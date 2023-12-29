@@ -41,6 +41,18 @@ public class TestFlight {
     }
 
     @Test
+    public void TestGetField() {
+        Flight f = Flight.fromCsv(this.validInput);
+        assertEquals("2018-01-02", f.getField("FL_DATE"));
+    }
+
+    @Test
+    public void TestGetFieldInvalidArgumentException() {
+        Flight f = Flight.fromCsv(this.validInput);
+        assertThrows(IllegalArgumentException.class, () -> f.getField("Blah"));
+    }
+
+    @Test
     public void TestFlightIsNotDiverted() {
         Flight f = Flight.fromCsv(this.validInput);
         assertTrue(f.isNotDiverted());
