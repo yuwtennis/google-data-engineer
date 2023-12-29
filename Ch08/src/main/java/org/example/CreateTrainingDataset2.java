@@ -78,7 +78,7 @@ public class CreateTrainingDataset2 {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                     Flight f = c.element();
-                    if (f.isNotCanceled() && f.isNotDiverted()) {
+                    if (f.isNotCancelled() && f.isNotDiverted()) {
                         c.output(f);
                     }
                 }

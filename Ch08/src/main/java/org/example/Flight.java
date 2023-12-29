@@ -44,7 +44,7 @@ public class Flight {
      *
      * @return
      */
-    public boolean isNotCanceled() {
+    public boolean isNotCancelled() {
         return fields[INPUTCOLS.CANCELLED.ordinal()].equals("0.00");
     }
 
@@ -88,5 +88,37 @@ public class Flight {
         }
         sb.deleteCharAt(sb.length() - 1); // last comma
         return sb.toString();
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String[] getFields() {
+        return fields;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public float getAvgDepartureDelay() {
+        return avgDepartureDelay;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public float getAvgArrivalDelay() {
+        return avgArrivalDelay;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public int getValidFieldNum() {
+        return INPUTCOLS.values().length;
     }
 }
