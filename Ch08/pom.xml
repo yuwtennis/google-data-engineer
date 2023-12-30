@@ -85,7 +85,12 @@
       <artifactId>google-cloud-dataflow-java-sdk-all</artifactId>
       <version>2.5.0</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>2.1</version>
+      <scope>test</scope>
+    </dependency>
     <!-- slf4j API frontend binding with JUL backend -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -98,9 +103,9 @@
       <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.10.1</version> <!-- can be omitted when using the BOM -->
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13</version> <!-- can be omitted when using the BOM -->
       <scope>test</scope>
     </dependency>
   </dependencies>
