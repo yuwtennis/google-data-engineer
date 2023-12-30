@@ -64,7 +64,7 @@ public class CreateTrainingDataset2 {
     Pipeline p = Pipeline.create(options);
 
     p.apply("ReadLines", TextIO.read().from(options.getInput()))
-            .apply("ParseFlights", ParDo.of(new DoFn<String, Flight>(){
+            .apply("ParseFlightsFn", ParDo.of(new DoFn<String, Flight>(){
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                     String line = c.element();
@@ -74,7 +74,7 @@ public class CreateTrainingDataset2 {
                     }
                 }
             }))
-            .apply("GoodFlights", ParDo.of(new DoFn<Flight, Flight>() {
+            .apply("GoodFlightsFn", ParDo.of(new DoFn<Flight, Flight>() {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
                     Flight f = c.element();

@@ -24,7 +24,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.PCollection;
-import org.example.transforms.ComputeTimeAvg;
+import org.example.transforms.GroupAndCombine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +64,12 @@ public class CreateTrainingDataset3 {
     Pipeline p = Pipeline.create(options);
 
     PCollection<String> computedAvg = p.apply("ReadLines",
-                    TextIO.read().from(options.getInput())).apply(
-                            new ComputeTimeAvg.ComputeTimeAvgTransform());
+                    TextIO.read().from(options.getInput()));
 
-    computedAvg.apply("WriteFlights", TextIO.write()
+    PCollection<String> csv = computedAvg
+            .apply("GroupAndCombine", new GroupAndCombine.ComputeTimeAvgTransform());
+
+    csv.apply("WriteFlights", TextIO.write()
                     .to(options.getOutput()+"delays4")
                     .withSuffix(".csv").withoutSharding());
 
