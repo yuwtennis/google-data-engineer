@@ -98,4 +98,32 @@ public class TestFlight {
         String trainingCsv = f.toTrainingCsv();
         assertEquals(String.join(",", expectedTrainingCsv), trainingCsv);
     }
+
+    @Test
+    public void TestGetDepartureHour() {
+        // Actual departure time 1/3/2018 0:56:00 minus departure airport tz offset (-18000 sec)
+        String expectedHour = "19";
+        Flight f = Flight.fromCsv(this.validInput);
+        assertEquals(expectedHour, f.getDepartureHour());
+    }
+
+    @Test
+    public void TestGetFieldsAsFloat() {
+        Float expectedDepDelay = -4.0f;
+        Flight f = Flight.fromCsv(this.validInput);
+        assertEquals(expectedDepDelay, f.getFieldAsFloat("DEP_DELAY"));
+    }
+
+    @Test
+    public void TestGetFieldsAsFloatThrowIllegalArgumentException() {
+        Flight f = Flight.fromCsv(this.validInput);
+        assertThrows(
+                IllegalArgumentException.class, () -> f.getFieldAsFloat("Blah"));
+    }
+
+    @Test
+    public void TestGetFieldAsFloatThrowNullPointerException() {
+        Flight f = Flight.fromCsv(this.validInput);
+        assertThrows(NullPointerException.class, () -> f.getFieldAsFloat(null));
+    }
 }
