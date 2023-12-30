@@ -42,7 +42,8 @@ public class TestFilterAirport {
     }
     @Test
     public void TestPipeline() {
-        tp.apply(Create.of(events)).apply(new FilterAirport("MIA"));
+        tp.apply(Create.of(events)).apply(
+                new FilterAirport.FilterAirportTransform("MIA"));
         tp.run();
     }
 }

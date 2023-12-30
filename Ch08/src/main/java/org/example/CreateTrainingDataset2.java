@@ -92,7 +92,12 @@ public class CreateTrainingDataset2 {
                     }
                 }
             }))
-            .apply("WriteFlights", TextIO.write().to(options.getOutput()+"flights3").withSuffix(".csv").withoutSharding());
+            .apply("WriteFlights",
+                    TextIO
+                            .write()
+                            .to(options.getOutput()+"flights3")
+                            .withSuffix(".csv")
+                            .withoutSharding());
 
     p.run();
   }

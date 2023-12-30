@@ -18,14 +18,15 @@
 package org.example;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Create;
-import org.example.transforms.FilterAirport;
+import org.apache.beam.sdk.values.PCollection;
+import org.example.transforms.ComputeTimeAvg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A starter example for writing Beam programs.
@@ -43,19 +44,32 @@ import java.util.List;
  *   --stagingLocation=<STAGING_LOCATION_IN_CLOUD_STORAGE>
  *   --runner=DataflowRunner
  */
-public class CreateTrainingDataset {
-  private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset.class);
+public class CreateTrainingDataset3 {
+  private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset3.class);
 
-  private static final List<String> events = Arrays.asList(
-          "2018-01-02,AA,19805,AA,102,12173,1217305,32134,HNL,11298,1129806,30194,DFW,2018-01-03 07:00:00,2018-01-03 08:03:00,63.00,24.00,2018-01-03 08:27:00,2018-01-03 15:00:00,4.00,2018-01-03 14:22:00,2018-01-03 15:04:00,42.00,0.00,,0.00,3784.00,21.31777778,-157.92027778,-36000.0,32.89722222,-97.03777778,-21600.0,arrived,2018-01-03 15:04:00",
-          "2018-01-02,AA,19805,AA,1391,13303,1330303,32467,MIA,15024,1502403,34945,STT,2018-01-02 17:00:00,2018-01-02 16:59:00,-1.00,15.00,2018-01-02 17:14:00,2018-01-03 15:30:00,4.00,2018-01-03 15:43:00,2018-01-03 15:34:00,-9.00,0.00,,0.00,1107.00,25.79527778,-80.29000000,-18000.0,18.33722222,-64.97333333,0.0,arrived,2018-01-03 15:34:00",
-          "2018-01-02,AA,19805,AA,1391,13303,1330303,32467,MIA,15024,1502403,34945,STT,2018-01-02 17:00:00,2018-01-02 16:59:00,-1.00,15.00,2018-01-02 17:14:00,2018-01-03 15:30:00,4.00,2018-01-03 15:43:00,2018-01-03 15:34:00,-9.00,0.00,,0.00,1107.00,25.79527778,-80.29000000,-18000.0,18.33722222,-64.97333333,0.0,arrived,2018-01-03 15:34:00"
-  );
+  public static interface MyOptions extends PipelineOptions {
+      @Description("Path of the file to read from")
+      String getInput();
+      void setInput(String s);
+
+      @Description("Path of the output directory")
+      @Default.String("/tmp/output/")
+      String getOutput();
+      void setOutput(String s);
+  }
+
   public static void main(String[] args) {
-    Pipeline p = Pipeline.create(
-        PipelineOptionsFactory.fromArgs(args).withValidation().create());
 
-    p.apply(Create.of(events)).apply(new FilterAirport.FilterAirportTransform("MIA"));
+    MyOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(MyOptions.class);
+    Pipeline p = Pipeline.create(options);
+
+    PCollection<String> computedAvg = p.apply("ReadLines",
+                    TextIO.read().from(options.getInput())).apply(
+                            new ComputeTimeAvg.ComputeTimeAvgTransform());
+
+    computedAvg.apply("WriteFlights", TextIO.write()
+                    .to(options.getOutput()+"delays4")
+                    .withSuffix(".csv").withoutSharding());
 
     p.run();
   }

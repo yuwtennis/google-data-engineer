@@ -7,13 +7,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FilterAirport extends PTransform<PCollection<String>, PCollection<String>> {
+public class FilterAirport {
     private static final Logger LOG = LoggerFactory.getLogger(FilterAirport.class);
-    private final String airportName;
 
-    public FilterAirport(String airportName) {
-        this.airportName = airportName;
-    }
     public static class StringFilteringFn extends DoFn<String, String> {
         private final String filterValue;
 
@@ -29,22 +25,32 @@ public class FilterAirport extends PTransform<PCollection<String>, PCollection<S
         }
     }
 
-    /**
-     * Composite transform that filter out event based on keyword
-     *
-     * @param pCol the input PCollection of type String
-     * @return the expanded PCollection of type String
-     */
-    public PCollection<String> expand(PCollection<String> pCol) {
+    public static class FilterAirportTransform
+            extends PTransform<PCollection<String>, PCollection<String>> {
 
-        return pCol
-                .apply(ParDo.of(new StringFilteringFn("MIA")))
-                .apply(ParDo.of(new DoFn<String, String>(){
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                        LOG.info(c.element());
-                        c.output(c.element());
-                    }
-                }));
+        private final String airportName;
+
+        public FilterAirportTransform(String airportName) {
+            this.airportName = airportName;
+        }
+        /**
+         * Expands the input PCollection of strings by applying a series of transformations.
+         *
+         * @param pCol The input PCollection of strings.
+         * @return The expanded PCollection of strings.
+         */
+        @Override
+        public PCollection<String> expand(PCollection<String> pCol) {
+
+            return pCol
+                    .apply(ParDo.of(new StringFilteringFn("MIA")))
+                    .apply(ParDo.of(new DoFn<String, String>() {
+                        @ProcessElement
+                        public void processElement(ProcessContext c) {
+                            LOG.info(c.element());
+                            c.output(c.element());
+                        }
+                    }));
+        }
     }
 }
