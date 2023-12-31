@@ -18,17 +18,17 @@ import java.util.*;
 public class TestGroupAndCombine {
     @Rule
     public final transient TestPipeline tp = TestPipeline.create();
-    private String event;
+    private String departedEvent;
 
     @Before
     public void Fixtures() {
-        this.event = "2018-01-02,AA,19805,AA,102,12173,1217305,32134,HNL,11298,1129806,30194,MIA,2018-01-03 07:00:00,2018-01-03 08:03:00,63.00,24.00,2018-01-03 08:27:00,2018-01-03 15:00:00,4.00,2018-01-03 14:22:00,2018-01-03 15:04:00,42.00,0.00,,0.00,3784.00,21.31777778,-157.92027778,-36000.0,32.89722222,-97.03777778,-21600.0,departed,2018-01-03 15:04:00";
+        this.departedEvent = "2018-01-02,AA,19805,AA,1723,11057,1105703,31057,CLT,14307,1430705,30721,PVD,2018-01-02 05:05:00,2018-01-02 05:04:00,-1.00,,,,,2018-01-02 06:56:00,,,0.00,,,683.00,35.21361111,-80.94916667,-18000.0,41.72222222,-71.42777778,-18000.0,departed,2018-01-02 05:04:00";
     }
 
     @Test
     public void TestGoodFlights() {
-        String expected = "2018-01-03 15:04:00";
-        Flight f = Flight.fromCsv(this.event);
+        String expected = "2018-01-02 05:04:00";
+        Flight f = Flight.fromCsv(this.departedEvent);
         List<Flight>  flights = Collections.singletonList(f);
 
         PCollection<String> output = tp.apply(Create.of(flights))
@@ -46,7 +46,7 @@ public class TestGroupAndCombine {
     }
     @Test
     public void TestAirportHour() {
-        Flight f = Flight.fromCsv(this.event);
+        Flight f = Flight.fromCsv(this.departedEvent);
         List<Flight>  flights = Collections.singletonList(f);
 
         PCollection<KV<String, Double>> output = tp.apply(Create.of(flights))
@@ -54,7 +54,7 @@ public class TestGroupAndCombine {
 
         PAssert.that(output)
                 .containsInAnyOrder(
-                        KV.of("HNL:22", 63.0)
+                        KV.of("CLT:00", -1.0)
                 );
         tp.run();
     }
