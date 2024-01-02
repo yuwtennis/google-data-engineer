@@ -33,7 +33,7 @@ public class TestGroupAndCombine {
         List<Flight>  flights = Collections.singletonList(f);
 
         PCollection<String> output = tp.apply(Create.of(flights))
-                .apply(ParDo.of(new ParsingIntoObjects.GoodFlightsFn()))
+                .apply(ParDo.of(new GroupAndCombine.GoodDepartedFlightsFn()))
                 .apply(
                         MapElements
                                 .into(TypeDescriptors.strings())
