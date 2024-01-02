@@ -10,18 +10,7 @@ import org.example.Flight;
 
 public class GroupAndCombine {
 
-    public static class ParseFlightsFn extends DoFn<String, Flight> {
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            String line = c.element();
-            Flight f = Flight.fromCsv(line);
-            if (f != null) {
-                c.output(f);
-            }
-        }
-    }
-
-    public static class GoodFlightsFn extends DoFn<Flight, Flight> {
+    public static class GoodDepartedFlightsFn extends DoFn<Flight, Flight> {
         @ProcessElement
         public void processElement(ProcessContext c) {
             Flight f = c.element();
@@ -31,6 +20,7 @@ public class GroupAndCombine {
             }
         }
     }
+
     public static class AirportHourFn extends DoFn<Flight, KV<String, Double>> {
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
@@ -63,8 +53,8 @@ public class GroupAndCombine {
         @Override
         public PCollection<String> expand(PCollection<String> pCol) {
             return pCol
-                    .apply("ParseFlightsFn", ParDo.of(new ParseFlightsFn()))
-                    .apply("GoodFlightsFn", ParDo.of(new GoodFlightsFn()))
+                    .apply("ParseFlightsFn", ParDo.of(new ParsingIntoObjects.ParseFlightsFn()))
+                    .apply("GoodDepartedFlightsFn", ParDo.of(new GoodDepartedFlightsFn()))
                     .apply("airport:hour", ParDo.of(new AirportHourFn()))
                     .apply(Mean.perKey())
                     .apply("DelayToCsv", ParDo.of(new DelayToCsvFn()));
