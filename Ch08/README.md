@@ -9,6 +9,7 @@
 
 Applies to
 - CreateTrainingDataset
+- CreateTrainingDataset6
 
 ```shell
 RUNNER=DirectRunner

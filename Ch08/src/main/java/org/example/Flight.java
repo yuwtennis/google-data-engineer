@@ -174,4 +174,35 @@ public class Flight {
             throws IllegalArgumentException, NullPointerException{
         return Float.parseFloat(fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
     }
+
+    /**
+     * Creates a new copy of the Flight object.
+     *
+     * @return a new Flight object copy
+     */
+    public Flight newCopy() {
+        Flight copy = new Flight();
+        copy.fields = this.fields.clone();
+        copy.avgDepartureDelay = this.avgDepartureDelay;
+        copy.avgArrivalDelay = this.avgArrivalDelay;
+        return copy;
+    }
+
+    /**
+     * Sets the average departure delay of a flight.
+     *
+     * @param avgDepartureDelay The average departure delay as a float.
+     */
+    public void setAvgDepartureDelay(float avgDepartureDelay) {
+        this.avgDepartureDelay = avgDepartureDelay;
+    }
+
+    /**
+     * Sets the average arrival delay of a flight.
+     *
+     * @param avgArrivalDelay The average arrival delay as a float.
+     */
+    public void setAvgArrivalDelay(float avgArrivalDelay) {
+        this.avgArrivalDelay = avgArrivalDelay;
+    }
 }

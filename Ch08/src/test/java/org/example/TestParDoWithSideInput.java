@@ -21,7 +21,7 @@ public class TestParDoWithSideInput {
     private List<String> trainingCsv;
 
     @Before
-    public void setUp() {
+    public void Fixtures() {
         this.trainingCsv = Collections.singletonList("2018-01-02,True");
     }
     @Test

@@ -10,25 +10,21 @@ import org.example.Flight;
 
 public class GroupAndCombine {
 
-    public static class GoodDepartedFlightsFn extends DoFn<Flight, Flight> {
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            Flight f = c.element();
-            // Field DIVERTED was empty. Only evaluate CANCELLED field.
-            if (f.getField("EVENT").equals("departed") && f.isNotCancelled()) {
-                c.output(f);
-            }
-        }
-    }
-
     public static class AirportHourFn extends DoFn<Flight, KV<String, Double>> {
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
-            if (f.getField("EVENT").equals("departed")) {
+            /*
+             The book used departed event , however , dataset from 20218-01-02 did not include
+             TAXI_OUT in departed event. Thus, I stuck to the original plan which is to use
+             arrived events for training dataset.
+              */
+
+            if (f.getField("EVENT").equals("arrived")) {
                 String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
                 // TAXI_OUT field was emtpy for  "depareted"  events
-                Double value = (double) (f.getFieldAsFloat("DEP_DELAY"));
+                Double value = (double) (f.getFieldAsFloat("DEP_DELAY")
+                        + f.getFieldAsFloat("TAXI_OUT"));
                 c.output(KV.of(key, value));
             }
         }
@@ -53,8 +49,8 @@ public class GroupAndCombine {
         @Override
         public PCollection<String> expand(PCollection<String> pCol) {
             return pCol
-                    .apply("ParseFlightsFn", ParDo.of(new ParsingIntoObjects.ParseFlightsFn()))
-                    .apply("GoodDepartedFlightsFn", ParDo.of(new GoodDepartedFlightsFn()))
+                    .apply("ParseFlights", ParDo.of(new ParsingIntoObjects.ParseFlightsFn()))
+                    .apply("GoodFlights", ParDo.of(new ParsingIntoObjects.GoodFlightsFn()))
                     .apply("airport:hour", ParDo.of(new AirportHourFn()))
                     .apply(Mean.perKey())
                     .apply("DelayToCsv", ParDo.of(new DelayToCsvFn()));
