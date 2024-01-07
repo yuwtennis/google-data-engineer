@@ -43,14 +43,7 @@ public class FilterAirport {
         public PCollection<String> expand(PCollection<String> pCol) {
 
             return pCol
-                    .apply(ParDo.of(new StringFilteringFn(airportName)))
-                    .apply(ParDo.of(new DoFn<String, String>() {
-                        @ProcessElement
-                        public void processElement(ProcessContext c) {
-                            LOG.info(c.element());
-                            c.output(c.element());
-                        }
-                    }));
+                    .apply(ParDo.of(new StringFilteringFn(airportName)));
         }
     }
 }

@@ -31,7 +31,6 @@ PROJECT=$(gcloud config get core/project)
 STAGING_LOCATION=gs://${PROJECT}/staging
 INPUT_LOCATION=gs://${PROJECT}/flights/chapter8/small.csv
 OUTPUT_LOCATION=gs://${PROJECT}/flights/chapter8/output/
-TRAIN_CSV_LOCATION=gs://${PROJECT}/flights/trainday.csv
 RUNNER=DataflowRunner
 
 # Run pipeline on Dataflow
@@ -49,8 +48,11 @@ mvn compile exec:java \
 
 Applies to
 - CreateTrainingDataset4
+- CreateTrainingDataset7
 
 ```shell
+PROJECT=$(gcloud config get core/project)
+TRAIN_CSV_LOCATION=gs://${PROJECT}/flights/trainday.csv
 RUNNER=DirectRunner
 mvn compile exec:java \
   -Dexec.mainClass=$MAINCLASS_PATH \

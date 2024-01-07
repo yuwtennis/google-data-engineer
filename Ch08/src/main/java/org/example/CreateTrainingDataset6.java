@@ -18,19 +18,11 @@
 package org.example;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.io.gcp.bigquery.SchemaAndRecord;
-import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.example.transforms.GroupAndCombine;
+import org.example.transforms.MutatingTheFlightObject;
 import org.example.transforms.ParsingIntoObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +33,9 @@ import java.util.Map;
 
 public class CreateTrainingDataset6 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset6.class);
+
+  private static final String DELAY_TYPE_DEPARTURE = "DEPARTURE";
+
 
   public static void main(String[] args) {
 
@@ -63,16 +58,9 @@ public class CreateTrainingDataset6 {
               .apply(View.asMap());
 
       // Load Avg Departure Delay
-      flights.apply("CloneAndSetAvgDelay", ParDo.of(new DoFn<Flight, Flight>() {
-          @ProcessElement
-          public void processElement(ProcessContext c) {
-              Flight f = c.element().newCopy() ;
-              String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
-              Double avgDepDelay = c.sideInput(avgDelay).get(key);
-              f.setAvgDepartureDelay(avgDepDelay.floatValue());
-              c.output(f);
-          }
-      }).withSideInputs(avgDelay))
+      flights.apply("CloneAndSetAvgDelay",
+                      ParDo.of(new MutatingTheFlightObject.AddDelayInfoFn(DELAY_TYPE_DEPARTURE, avgDelay))
+                              .withSideInputs(avgDelay))
               .apply("Log", ParDo.of(new DoFn<Flight, Void>(){
                   @ProcessElement
                   public void processElement(ProcessContext c) {

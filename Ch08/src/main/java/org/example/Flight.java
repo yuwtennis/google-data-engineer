@@ -2,15 +2,20 @@ package org.example;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 @DefaultCoder(AvroCoder.class)
 public class Flight {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Flight.class);
+
     private enum INPUTCOLS {
         FL_DATE,OP_UNIQUE_CARRIER,OP_CARRIER_AIRLINE_ID,OP_CARRIER,OP_CARRIER_FL_NUM,
         ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,
@@ -150,16 +155,22 @@ public class Flight {
      * @return The hour of departure as a string.
      */
     public String getDepartureHour() {
-        String format = "yyyy-MM-dd H:mm:ss";
+        String format = "yyyy-MM-dd HH:mm:ss";
 
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(format);
-        ZonedDateTime datetime = LocalDateTime
-                .parse(fields[INPUTCOLS.DEP_TIME.ordinal()], fmt)
-                .atZone(ZoneId.of("UTC"))
-                .plusSeconds(
-                        (long)Float.parseFloat(fields[INPUTCOLS.DEP_AIRPORT_TZOFFSET.ordinal()]));
+        DateTimeZone tz = DateTimeZone.forOffsetHours(
+                getFieldAsFloat("DEP_AIRPORT_TZOFFSET")
+                        .intValue() / 3600);
 
-        return String.format("%02d", datetime.getHour());
+        DateTimeFormatter fmt = DateTimeFormat
+                .forPattern(format)
+                .withZone(DateTimeZone.UTC);
+
+        DateTime utc = DateTime
+                .parse(fields[INPUTCOLS.DEP_TIME.ordinal()], fmt);
+
+        DateTime dst = utc.withZone(tz);
+
+        return String.format("%02d", dst.getHourOfDay());
     }
 
     /**
@@ -204,5 +215,19 @@ public class Flight {
      */
     public void setAvgArrivalDelay(float avgArrivalDelay) {
         this.avgArrivalDelay = avgArrivalDelay;
+    }
+
+    /**
+     * Returns NOTIFY_TIME as joda Instance object
+     *
+     * @return Instance object of Notify Time
+     */
+    public Instant getEventTimestamp() {
+        String timestamp = fields[INPUTCOLS.NOTIFY_TIME.ordinal()];
+        DateTimeFormatter formatter = DateTimeFormat
+                .forPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(DateTimeZone.UTC);
+        DateTime dateTime = DateTime.parse(timestamp, formatter);
+        return dateTime.toInstant();
     }
 }

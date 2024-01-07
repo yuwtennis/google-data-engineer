@@ -1,6 +1,8 @@
 package org.example;
 
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -126,5 +128,13 @@ public class TestFlight {
     public void TestGetFieldAsFloatThrowNullPointerException() {
         Flight f = Flight.fromCsv(this.validInput);
         assertThrows(NullPointerException.class, () -> f.getFieldAsFloat(null));
+    }
+
+    @Test
+    public void TestGetEventTimestamp() {
+        Flight f = Flight.fromCsv(this.validInput);
+        String expected = "2018-01-03 03:32:00";
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        assertEquals(expected, fmt.print(f.getEventTimestamp()));
     }
 }
