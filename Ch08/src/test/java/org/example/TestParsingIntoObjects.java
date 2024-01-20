@@ -28,7 +28,7 @@ public class TestParsingIntoObjects {
     }
 
     @Test
-    public void TestGoodFlights() {
+    public void TestGoodArrivedFlights() {
         String expected = "2018-01-02 06:12:00";
 
         PCollection<String> output = tp.apply(Create.of(this.events))

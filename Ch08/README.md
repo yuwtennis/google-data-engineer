@@ -14,6 +14,7 @@ Applies to
 ```shell
 RUNNER=DirectRunner
 
+
 mvn compile exec:java \
   -Dexec.mainClass=$MAINCLASS_PATH \
   -Dexec.args="\
@@ -62,6 +63,11 @@ mvn compile exec:java \
 ```
 
 ## Read from Bigquery and export to gs
+
+Applies to
+- CreateTrainingDataset5
+- CreateTrainingDataset8
+
 ```shell
 # Set envs below is just an example
 PROJECT=$(gcloud config get core/project)

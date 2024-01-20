@@ -23,8 +23,11 @@ public class ParsingIntoObjects {
         @ProcessElement
         public void processElement(ProcessContext c) {
             Flight f = c.element();
-            // Field DIVERTED was empty. Only evaluate CANCELLED field.
-            if (f.isNotDiverted() && f.isNotCancelled()) {
+            if (f.getField("EVENT").equals("departed")
+                    && f.isNotDiverted() && f.isNotCancelled()) {
+                c.output(f);
+            } else if (f.getField("EVENT").equals("arrived")
+                    && f.isNotDiverted() ) {
                 c.output(f);
             }
         }
