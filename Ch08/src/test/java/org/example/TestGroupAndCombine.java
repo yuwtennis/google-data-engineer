@@ -53,6 +53,7 @@ public class TestGroupAndCombine {
         PCollection<KV<String, Double>> output = tp.apply(Create.of(flights))
                 .apply(ParDo.of(new GroupAndCombine.AirportHourFn()));
 
+
         PAssert.that(output)
                 .containsInAnyOrder(
                         KV.of("CLT:00", 9.0)
