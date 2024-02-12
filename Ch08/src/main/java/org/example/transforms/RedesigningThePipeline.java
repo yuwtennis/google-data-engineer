@@ -30,7 +30,7 @@ public class RedesigningThePipeline {
                 .of(depTag, depDelays)
                 .and(arrTag, arrDelays)
                 .apply(CoGroupByKey.create())
-                .apply(ParDo.of(new DoFn<KV<String, CoGbkResult>, Flight>() {
+                .apply("Flatten Windows",ParDo.of(new DoFn<KV<String, CoGbkResult>, Flight>() {
                     @ProcessElement
                     public void flatten(ProcessContext c) {
                         KV<String, CoGbkResult> e = c.element();
