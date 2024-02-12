@@ -24,10 +24,10 @@ public class ParsingIntoObjects {
         public void processElement(ProcessContext c) {
             Flight f = c.element();
             if (f.getField("EVENT").equals("departed")
-                    && f.isNotDiverted() && f.isNotCancelled()) {
+                    && f.isNotCancelled()) {
                 c.output(f);
             } else if (f.getField("EVENT").equals("arrived")
-                    && f.isNotDiverted() ) {
+                    && f.isNotDiverted() && f.isNotDiverted()  ) {
                 c.output(f);
             }
         }

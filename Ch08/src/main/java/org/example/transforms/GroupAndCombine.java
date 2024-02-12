@@ -14,16 +14,11 @@ public class GroupAndCombine {
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
-            /*
-             The book used departed event , however , dataset from 20218-01-02 did not include
-             TAXI_OUT in departed event. Thus, I stuck to the original plan which is to use
-             arrived events for training dataset.
-              */
 
             if (f.getField("EVENT").equals("arrived")) {
                 String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
-                // TAXI_OUT field was emtpy for  "depareted"  events
-                Double value = (double) (f.getFieldAsFloat("DEP_DELAY")
+                // TAXI_OUT field was emtpy for  "departed"  events
+                Double value = (double)(f.getFieldAsFloat("DEP_DELAY")
                         + f.getFieldAsFloat("TAXI_OUT"));
                 c.output(KV.of(key, value));
             }

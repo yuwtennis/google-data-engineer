@@ -28,8 +28,7 @@ public class TestParsingIntoObjects {
     }
 
     @Test
-    public void TestGoodArrivedFlights() {
-        String expected = "2018-01-02 06:12:00";
+    public void TestGoodFlights() {
 
         PCollection<String> output = tp.apply(Create.of(this.events))
                 .apply(ParDo.of(new ParsingIntoObjects.ParseFlightsFn()))
@@ -41,7 +40,8 @@ public class TestParsingIntoObjects {
 
         PAssert.that(output)
                 .containsInAnyOrder(
-                        expected
+                        "2018-01-02 06:12:00",
+                        "2018-01-02 05:04:00"
                 );
         tp.run();
     }

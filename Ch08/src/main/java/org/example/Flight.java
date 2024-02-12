@@ -81,7 +81,9 @@ public class Flight {
         float[] result = new float[5];
         int col = 0;
         result[col++] = Float.parseFloat(fields[INPUTCOLS.DEP_DELAY.ordinal()]);
-        result[col++] = Float.parseFloat(fields[INPUTCOLS.TAXI_OUT.ordinal()]);
+        // departed events has empty TAXI_OUT
+        result[col++] = Float.parseFloat(
+                fields[INPUTCOLS.TAXI_OUT.ordinal()].isEmpty() ? "0" : fields[INPUTCOLS.TAXI_OUT.ordinal()]);
         result[col++] = Float.parseFloat(fields[INPUTCOLS.DISTANCE.ordinal()]);
         result[col++] = avgDepartureDelay;
         result[col++] = avgArrivalDelay;
@@ -183,7 +185,14 @@ public class Flight {
      */
     public Float getFieldAsFloat(String fieldName)
             throws IllegalArgumentException, NullPointerException{
-        return Float.parseFloat(fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
+        float fieldNum = 0f;
+
+        try {
+            fieldNum = Float.parseFloat(fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
+        } catch (NumberFormatException e) {
+            Flight.LOG.error("Format error: {}", fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
+        }
+        return fieldNum;
     }
 
     /**
