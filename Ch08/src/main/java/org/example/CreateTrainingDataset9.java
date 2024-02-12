@@ -146,7 +146,8 @@ public class CreateTrainingDataset9 {
                               double value = f.getFieldAsFloat("ARR_DELAY");
                               c.output(KV.of(key, value));
                           }
-                      }}));
+                      }}))
+                      .apply("MeanPerKey", Mean.perKey());
 
       PCollection<KV<String, Flight>> depDelays =
               lastHourFlights
@@ -180,8 +181,8 @@ public class CreateTrainingDataset9 {
 				  }));
 
       // Combine 2 collections by DEST
-      /*
-            PCollection<Flight> groupedFlights = RedesigningThePipeline.coGrp(depDelays, arrDelays);
+
+      PCollection<Flight> groupedFlights = RedesigningThePipeline.coGrp(depDelays, arrDelays);
 
       groupedFlights
               .apply("ToCsv", ParDo.of(new DoFn<Flight, String>() {
@@ -198,7 +199,7 @@ public class CreateTrainingDataset9 {
                       .to(options.getOutput()+"flights9")
                       .withSuffix(".csv").withoutSharding()
               );
-*/
+
       p.run();
   }
 }
