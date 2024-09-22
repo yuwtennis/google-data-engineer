@@ -16,9 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestParsingIntoObjects {
+    private List<String> events;
+
     @Rule
     public final transient TestPipeline tp = TestPipeline.create();
-    private List<String> events;
 
     @Before
     public void Fixtures() {

@@ -100,11 +100,20 @@ public class Flight {
         float[] features = this.getInputFeatures();
         float arrivalDelay = Float.parseFloat(fields[INPUTCOLS.ARR_DELAY.ordinal()]);
         boolean ontime = arrivalDelay < 15 ;
+        INPUTCOLS[] stringFeatures = {INPUTCOLS.OP_UNIQUE_CARRIER,
+                INPUTCOLS.DEP_AIRPORT_LAT, INPUTCOLS.DEP_AIRPORT_LON,
+                INPUTCOLS.ARR_AIRPORT_LAT, INPUTCOLS.ARR_AIRPORT_LON,
+                INPUTCOLS.ORIGIN, INPUTCOLS.DEST };
         StringBuilder sb = new StringBuilder();
         sb.append(ontime ? 1.0 : 0.0);
         sb.append(",");
         for (int i = 0; i < features.length; ++i) {
             sb.append(features[i]);
+            sb.append(",");
+        }
+        // TODO Supply missing features
+        for(INPUTCOLS cols : stringFeatures) {
+            sb.append(fields[cols.ordinal()]);
             sb.append(",");
         }
         sb.deleteCharAt(sb.length() - 1); // last comma

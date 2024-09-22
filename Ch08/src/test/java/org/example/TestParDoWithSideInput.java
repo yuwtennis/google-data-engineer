@@ -57,7 +57,7 @@ public class TestParDoWithSideInput {
                                 ParDo.of(
                                         new ParDoWithSideInput.FilterDataset(
                                                 trainView,
-                                                ParDoWithSideInput.DatasetContext.TRAINING)
+                                                true)
                                 ).withSideInputs(trainView))
                         .apply("ToNotifyDate", MapElements
                                 .into(TypeDescriptors.strings())
@@ -83,7 +83,7 @@ public class TestParDoWithSideInput {
                                 ParDo.of(
                                         new ParDoWithSideInput.FilterDataset(
                                                 trainView,
-                                                ParDoWithSideInput.DatasetContext.TEST)
+                                                false)
                                 ).withSideInputs(trainView))
                         .apply("ToNotifyDate", MapElements
                                 .into(TypeDescriptors.strings())
@@ -103,7 +103,7 @@ public class TestParDoWithSideInput {
                         ParDo.of(
                                 new ParDoWithSideInput.FilterDataset(
                                         null,
-                                        ParDoWithSideInput.DatasetContext.TEST)
+                                        false)
                         ));
 
         tp.run();
