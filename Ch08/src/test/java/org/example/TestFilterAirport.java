@@ -16,9 +16,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class TestFilterAirport {
+    private List<String> events;
+
     @Rule
     public final transient TestPipeline tp = TestPipeline.create();
-    private List<String> events;
+
     @Before
     public void Fixtures() {
         this.events = Collections.singletonList(

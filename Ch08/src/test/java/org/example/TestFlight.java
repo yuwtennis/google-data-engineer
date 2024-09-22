@@ -88,7 +88,7 @@ public class TestFlight {
 
     @Test
     public void TestToTrainingCsvOnTime() {
-        String[] expectedTrainingCsv = {"1.0","-4.0","37.0","919.0","NaN","NaN"};
+        String[] expectedTrainingCsv = {"1.0","-4.0","37.0","919.0","NaN","NaN","AA","25.79527778","-80.29000000","38.85138889","-77.03777778","MIA","DCA"};
         Flight f = Flight.fromCsv(this.validInput);
         String trainingCsv = f.toTrainingCsv();
         assertEquals(String.join(",", expectedTrainingCsv), trainingCsv);
@@ -96,7 +96,7 @@ public class TestFlight {
 
     @Test
     public void TestToTrainingCsvLateArrival() {
-        String[] expectedTrainingCsv = {"0.0","-4.0","37.0","919.0","NaN","NaN"};
+        String[] expectedTrainingCsv = {"0.0","-4.0","37.0","919.0","NaN","NaN","AA","25.79527778","-80.29000000","38.85138889","-77.03777778","MIA","DCA"};
         Flight f = Flight.fromCsv(this.flightLateArrivalInput);
         String trainingCsv = f.toTrainingCsv();
         assertEquals(String.join(",", expectedTrainingCsv), trainingCsv);

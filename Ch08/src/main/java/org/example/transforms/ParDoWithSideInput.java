@@ -11,10 +11,6 @@ import java.util.Map;
 
 public class ParDoWithSideInput {
 
-    public enum DatasetContext {
-        TRAINING, TEST
-    }
-
     public static class ParseTrainingDayCsv extends DoFn<String, KV<String, String>> {
         @ProcessElement
         public void processElement(ProcessContext c) {
@@ -47,13 +43,14 @@ public class ParDoWithSideInput {
 
     public static class FilterDataset extends DoFn<Flight, Flight> {
         private final PCollectionView<Map<String, String>> trainView;
-        private final DatasetContext expectedContext;
+        private boolean trainSetExtracted;
+
 
         public FilterDataset(
                 PCollectionView<Map<String, String>> trainView,
-                DatasetContext expectedContext) {
+                boolean trainSetExtracted) {
             this.trainView = trainView;
-            this.expectedContext = expectedContext;
+            this.trainSetExtracted = trainSetExtracted;
         }
 
         @ProcessElement
@@ -68,9 +65,7 @@ public class ParDoWithSideInput {
             boolean isTrainDay = c.sideInput(this.trainView).containsKey(date);
 
             // If it includes training day then emit
-            if(this.expectedContext == DatasetContext.TRAINING && isTrainDay) {
-                c.output(f);
-            } else if(this.expectedContext == DatasetContext.TEST && ! isTrainDay) {
+            if(isTrainDay == this.trainSetExtracted) {
                 c.output(f);
             }
         }

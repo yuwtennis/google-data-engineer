@@ -32,12 +32,9 @@ import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.*;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.ParDoWithSideInput;
-import org.example.transforms.ParDoWithSideInput.DatasetContext;
 import org.example.transforms.ParsingIntoObjects;
 import org.example.transforms.RedesigningThePipeline;
 import org.joda.time.Duration;
@@ -45,15 +42,12 @@ import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
 public class CreateTrainingDataset10 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset10.class);
-  private static final String DELAY_TYPE_DEPARTURE = "DEPARTURE";
-  private static final String DELAY_TYPE_ARRIVAL = "ARRIVAL";
-  public static interface MyOptions extends PipelineOptions {
+  public interface MyOptions extends PipelineOptions {
 
       @Description("Path of the temp location used by BigQuery query cache")
       String getTempLocation();
@@ -84,13 +78,13 @@ public class CreateTrainingDataset10 {
 
       String query = "SELECT EVENT_DATA FROM flights.simevents ";
       if(!options.getFullDataset()) {
-          query += "WHERE STRING(FL_DATE) < '2018-01-04' AND ";
+          query += "WHERE STRING(FL_DATE) <= '2018-01-04' AND ";
       }
       query += "(EVENT = 'departed' OR EVENT = 'arrived')";
 
       CreateTrainingDataset10.LOG.info(query);
 
-      PCollection<String> events =
+      PCollection<String> allFlights =
               p.apply("LoadBQ",
                       BigQueryIO
                               .read(
@@ -109,7 +103,7 @@ public class CreateTrainingDataset10 {
                               ParDo.of(new ParDoWithSideInput.ParseTrainingDayCsv()))
                       .apply("toView", View.asMap());
 
-      PCollection<Flight> flights = events
+      PCollection<Flight> goodFlights = allFlights
                       .apply("ToFLights", ParDo.of(new DoFn<String, Flight>() {
                           @ProcessElement
                           public void processElement(ProcessContext c) {
@@ -120,18 +114,22 @@ public class CreateTrainingDataset10 {
                               }
                           }
                       }))
-              .apply("GoodFlights", ParDo.of(new ParsingIntoObjects.GoodFlightsFn()))
+              .apply("GoodFlights", ParDo.of(new ParsingIntoObjects.GoodFlightsFn()));
+
+      PCollection<Flight> trainFlights = goodFlights
               .apply("FilterTrainDays",
                       ParDo.of(
                               new ParDoWithSideInput
                                       .FilterDataset(
-                                              trainDays, DatasetContext.TRAINING)
+                                              trainDays, true
+                              )
                       ).withSideInputs(trainDays));
 
-      //Text output for every airport-hour
-      //To csv
+      // Departure average over training dataset
+      // Text output for every airport-hour
+      // To csv
       PCollection<KV<String, Double>> airportHours =
-              flights
+              trainFlights
                       .apply(ParDo.of(new GroupAndCombine.AirportHourFn()))
                       .apply(Mean.perKey());
 
@@ -146,17 +144,18 @@ public class CreateTrainingDataset10 {
               .apply(
                       TextIO
                               .write()
+                              .to(options.getOutput()+"delays")
                               .withSuffix(".csv")
-                              .withoutSharding()
-                              .to(options.getOutput()+"delays"));
+                              .withoutSharding());
 
       //Create view for average departure delay
       PCollectionView<Map<String, Double>> avgDepDelay =
               airportHours.apply("ToDepartureDelayView", View.asMap());
 
-      // Average arrival delay over an hour for every 5 minute
+      // Average arrival delay over entire dataset
+      // Delay over an hour for every 5 minute
       PCollection<Flight> lastHourFlights =
-              flights
+              goodFlights
                       .apply(Window.into(
                               SlidingWindows.of(
                                       Duration.standardHours(1)
@@ -218,12 +217,19 @@ public class CreateTrainingDataset10 {
       // Combine 2 collections by DEST
       PCollection<Flight> groupedFlights = RedesigningThePipeline.coGrp(depDelays, arrDelays);
 
-      for(DatasetContext c : DatasetContext.values()) {
-          flightToCsv(
+      for(String t : new String[]{"train", "test"}) {
+          PCollection<String> csv = flightToCsv(
                   groupedFlights,
                   trainDays,
-                  c,
-                  options.getOutput());
+                  t.equals("train")
+                  );
+
+          csv.apply(t+"Csv",
+                  TextIO
+                          .write()
+                          .to(options.getOutput()+t)
+                          .withSuffix(".csv")
+          );
       }
 
       PipelineResult result = p.run();
@@ -233,38 +239,28 @@ public class CreateTrainingDataset10 {
       }
   }
 
-  private static void flightToCsv(
+  private static PCollection<String> flightToCsv(
           PCollection<Flight> flights,
           PCollectionView<Map<String, String>> traindays,
-          DatasetContext datasetContext,
-          String outputPath) {
+          boolean trainSetExtracted) {
 
-      String name = datasetContext.toString().toLowerCase();
-
-      flights
-              .apply(name+"FilterDataSet",
+          return flights
+              .apply("FilterDataSet",
                       ParDo.of(
                               new ParDoWithSideInput.FilterDataset(
-                                      traindays,
-                                      datasetContext)).withSideInputs(traindays))
-              .apply(name+"ToCsv", ParDo.of(new DoFn<Flight, String>() {
+                                      traindays, trainSetExtracted))
+                              .withSideInputs(traindays))
+              .apply("ToCsv", ParDo.of(new DoFn<Flight, String>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                       Flight f = c.element();
                       try {
-
                           String csv = f.toTrainingCsv();
                           c.output(csv);
                       } catch(NumberFormatException e) {
                           CreateTrainingDataset10.LOG.error(Arrays.toString(f.getFields()));
                       }
                   }
-              }))
-              .apply(name+"Csv",
-                      TextIO
-                              .write()
-                              .to(outputPath+datasetContext.toString().toLowerCase())
-                              .withSuffix(".csv")
-              );
+              }));
   }
 }
