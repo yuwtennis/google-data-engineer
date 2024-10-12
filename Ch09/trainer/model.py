@@ -1,17 +1,28 @@
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, List
 
 import tensorflow as tf
 from tensorflow.python.data.ops.map_op import _MapDataset
-from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, CategoricalColumn
+from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, CategoricalColumn, IndicatorColumn
 from tensorflow.python.keras.callbacks import History
 
 CSV_COLUMNS = (
-    'ontime,dep_delay,taxiout,distance,avg_dep_delay,avg_arr_delay' +
-    'carrier,dep_lat,dep_lon,arr_lat,arr_lon,origin,dest'
-).split(',')
+    'ontime,'
+    'dep_delay,'
+    'taxiout,'
+    'distance,'
+    'avg_dep_delay,'
+    'avg_arr_delay,'
+    'carrier,'
+    'dep_lat,'
+    'dep_lon,'
+    'arr_lat,'
+    'arr_lon,'
+    'origin,'
+    'dest'
+)
 
 LABEL_COLUMN = 'ontime'
 
@@ -20,10 +31,35 @@ DEFAULTS = [
     ['na'], [0.0], [0.0], [0.0], [0.0], ['na'], ['na']
 ]
 
-CHECK_POINT_PATH = f"{str(Path('.').cwd())}/checkpoints/flights.cpt"
-MODEL_PATH = f'export/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
+REAL_COLS = ('dep_delay,'
+             'taxiout,'
+             'distance,'
+             'avg_dep_delay,'
+             'avg_arr_delay,'
+             'dep_lat,'
+             'dep_lon,'
+             'arr_lat,'
+             'arr_lon')
 
+CARRIER_VOCAB_LIST = ('AS,'
+                      'VX,'
+                      'F9,'
+                      'UA,'
+                      'US,'
+                      'WN,'
+                      'HA,'
+                      'EV,'
+                      'MQ,'
+                      'DL,'
+                      '00,'
+                      '86,'
+                      'NK,'
+                      'AA')
+
+CHECK_POINT_PATH = f"checkpoints/flights.cpt"
+MODEL_PATH = f'export/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
 LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 def read_dataset(
         filename: str,
@@ -49,7 +85,7 @@ def read_dataset(
         filename,
         batch_size,
         header=False,
-        column_names=CSV_COLUMNS,
+        column_names=CSV_COLUMNS.split(','),
         column_defaults=DEFAULTS)
 
     dataset = dataset.map(pop_features_and_label)
@@ -84,14 +120,13 @@ def get_feature_columns() -> Tuple[Dict[str, NumericColumn], Dict[str, Categoric
     """
     real = {
         col_name: tf.feature_column.numeric_column(col_name)
-            for col_name in 'dep_delay,taxiout,distance,avg_dep_delay,avg_arr_delay,dep_lat,dep_lon,arr_lat,arr_lon'
-                                .split(',')
+            for col_name in REAL_COLS.split(',')
     }
 
     sparse = {
         'carrier': tf.feature_column.categorical_column_with_vocabulary_list(
             'carrier',
-            vocabulary_list='AS,VX,F9,UA,US,WN,HA,EV,MQ,DL,00,86,NK,AA').split(','),
+            vocabulary_list=CARRIER_VOCAB_LIST.split(',')),
         'origin': tf.feature_column.categorical_column_with_hash_bucket(
             'origin',
             hash_bucket_size=1000
@@ -123,6 +158,8 @@ def get_inputs(real: Dict[str, Any], sparse: Dict[str, Any]) -> Dict[str, tf.ker
         col_name: tf.keras.layers.Input(name=col_name, shape=(), dtype='string') for col_name in sparse.keys()
     })
 
+    LOGGER.info(f"Keys are {inputs.keys()}")
+
     return inputs
 
 def calc_rmse(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
@@ -135,6 +172,14 @@ def calc_rmse(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
     """
     return tf.sqrt(tf.reduce_mean((tf.square(y_pred - y_true))))
 
+def one_hot_encode(sparse: Dict[str, CategoricalColumn]) -> Dict[str, IndicatorColumn]:
+    """
+
+    :param sparse:
+    :return:
+    """
+    return {col: tf.feature_column.indicator_column(val) for col, val in sparse.items()}
+
 class ModelFactory:
     """
 
@@ -143,22 +188,22 @@ class ModelFactory:
     @staticmethod
     def new_linear_classifier(
             inputs: Dict[str, tf.keras.layers.Input],
-            sparse: Dict[str, NumericColumn],
-            real: Dict[str, CategoricalColumn]) -> tf.keras.Model:
+            real_list: List[NumericColumn],
+            sparse_list: List[IndicatorColumn]) -> tf.keras.Model:
         """
 
+        :param real_list:
+        :param sparse_list:
         :param inputs: Keras tensors
-        :param sparse: Tensorflow NumericColumns
-        :param real: Tensorflow CategoricalColumns
         :return:
         """
         both = tf.keras.layers.DenseFeatures(
-            list(sparse) + list(real), name='features'
+            real_list + sparse_list, name='features'
         )(inputs)
 
         output = tf.keras.layers.Dense(
             1, activation='sigmoid', name='pred'
-        )
+        )(both)
 
         model = tf.keras.Model(inputs, output)
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', calc_rmse])
@@ -213,8 +258,9 @@ class TrainJobs:
         :param history:
         :return:
         """
-        final_rmse = history.history['val_rmse'][-1]
-        LOGGER.info('Final RMSE = %s', final_rmse)
+
+        final_rmse = history.history['val_calc_rmse'][-1]
+        LOGGER.info('Final RMSE (Validation Calculated RMSE) = %s', final_rmse)
 
         # TODO Hyperparameter tuning
 

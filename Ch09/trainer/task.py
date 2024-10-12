@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 from tensorflow.python.data.ops.map_op import _MapDataset
@@ -21,8 +22,11 @@ def wf_linear_classification(
     real, sparse = model.get_feature_columns()
     inputs = model.get_inputs(real, sparse)
 
+    # One hot encode the categorical column
+    sparse = model.one_hot_encode(sparse)
+
     # Prepare model
-    md = ModelFactory.new_linear_classifier(inputs, real, sparse)
+    md = ModelFactory.new_linear_classifier(inputs, list(real.values()), list(sparse.values()))
 
     # Train
     h, tm = TrainJobs.train(tds, eds, md,  1, 1, output_dir)
@@ -54,6 +58,9 @@ def main():
     traindata = arguments.pop('traindata')
     evaldata = arguments.pop('evaldata')
     output_dir = arguments.pop('output_dir')
+
+    # Set logging
+    logging.basicConfig(level=logging.INFO)
 
     # Prepare dataset
     tds = model.read_dataset(traindata, truncate=5)
