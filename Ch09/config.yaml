@@ -1,0 +1,7 @@
+workerPoolSpecs:
+  machineSpec:
+    # Supported machine types
+    # https://cloud.google.com/vertex-ai/docs/training/configure-compute
+    machineType: n2-standard-4
+  replicaCount: 1
+
