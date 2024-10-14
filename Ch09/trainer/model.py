@@ -191,16 +191,19 @@ class ModelFactory:
             real_list: List[NumericColumn],
             sparse_list: List[IndicatorColumn]) -> tf.keras.Model:
         """
+        Prepare single NN layer with sigmoid activation function
 
         :param real_list:
         :param sparse_list:
         :param inputs: Keras tensors
         :return:
         """
+        # Single NN layer
         both = tf.keras.layers.DenseFeatures(
             real_list + sparse_list, name='features'
         )(inputs)
 
+        # Invoke activation function
         output = tf.keras.layers.Dense(
             1, activation='sigmoid', name='pred'
         )(both)
