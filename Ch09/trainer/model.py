@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,8 +64,8 @@ LOGGER.setLevel(logging.INFO)
 
 def read_dataset(
         filename: str,
-        mode: tf.estimator.ModeKeys = tf.estimator.ModeKeys.EVAL,
         batch_size: int = 512,
+        mode: tf.estimator.ModeKeys = tf.estimator.ModeKeys.TRAIN,
         truncate: int = None
 )  -> _MapDataset:
     """
@@ -213,6 +214,38 @@ class ModelFactory:
 
         return model
 
+BATCH_CUT_OFF_SIZE = 10000
+
+@dataclasses.dataclass
+class TrainParams:
+    """
+    Defines training parameters
+
+    :ivar num_of_examples: Group of samples in a batch when read by make_csv_dataset
+    :ivar train_batch_size:
+    :ivar num_of_epochs:
+    :ivar eval_batch_size:
+    :ivar num_of_eval_examples:
+    """
+    num_of_examples: int
+    train_batch_size: int
+
+    # Automatically set
+    num_of_epochs: int = dataclasses.field(init=False)
+    eval_batch_size: int = dataclasses.field(init=False)
+    num_of_eval_examples: int = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        if self.num_of_examples < BATCH_CUT_OFF_SIZE:
+            self.num_of_epochs = 2
+            self.train_batch_size = 3
+            self.eval_batch_size = 100
+            self.num_of_eval_examples = 5 * self.eval_batch_size
+        else:
+            self.num_of_epochs = 10
+            self.eval_batch_size = 10000
+            self.num_of_eval_examples = None
+
 class TrainJobs:
 
     @staticmethod
@@ -220,19 +253,17 @@ class TrainJobs:
             train_dataset: _MapDataset,
             eval_dataset: _MapDataset,
             model: tf.keras.Model,
-            num_of_epochs: int,
-            steps_per_epoch: int,
-            output_dir: str = '.',
+            output_dir: str,
+            tp: TrainParams
             ) -> Tuple[History, tf.keras.Model]:
         """
         Train the model and print the evaluation.
 
-        :param output_dir:
-        :param train_dataset:
-        :param eval_dataset:
-        :param model:
-        :param num_of_epochs:
-        :param steps_per_epoch:
+        :param tp:
+        :param output_dir: Output directory to store the trained model
+        :param train_dataset: Training dataset
+        :param eval_dataset: Validation dataset
+        :param model: Model to train
         :return:
         """
 
@@ -245,8 +276,8 @@ class TrainJobs:
         history: History = model.fit(
             train_dataset,
             validation_data=eval_dataset,
-            epochs=num_of_epochs,
-            steps_per_epoch=steps_per_epoch,
+            epochs=tp.num_of_epochs,
+            steps_per_epoch=tp.train_batch_size,
             validation_steps=10,
             callbacks=[cp_callback]
         )

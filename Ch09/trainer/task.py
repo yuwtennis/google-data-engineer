@@ -1,18 +1,23 @@
 import argparse
+import dataclasses
 import logging
 import os
 
+from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 
 import model
 from model import ModelFactory, TrainJobs
 
+
 def wf_linear_classification(
         tds: _MapDataset,
         eds: _MapDataset,
-        output_dir: str) -> None:
+        output_dir: str,
+        tp: model.TrainParams) -> None:
     """
 
+    :param train_params:
     :param tds:
     :param eds:
     :param output_dir:
@@ -29,7 +34,7 @@ def wf_linear_classification(
     md = ModelFactory.new_linear_classifier(inputs, list(real.values()), list(sparse.values()))
 
     # Train
-    h, tm = TrainJobs.train(tds, eds, md,  1, 1, output_dir)
+    h, tm = TrainJobs.train(tds, eds, md, output_dir, tp)
 
     # Eval
     TrainJobs.eval(h)
@@ -53,6 +58,16 @@ def main():
                         default=os.getcwd(),
                         required=False)
 
+    parser.add_argument('--num_of_examples',
+                        help='Batches',
+                        default=1000000,
+                        required=False)
+
+    parser.add_argument('--train_batch_size',
+                        help='Batches',
+                        default=64,
+                        required=False)
+
     args = parser.parse_args()
     arguments = args.__dict__
     traindata = arguments.pop('traindata')
@@ -62,11 +77,15 @@ def main():
     # Set logging
     logging.basicConfig(level=logging.INFO)
 
-    # Prepare dataset
-    tds = model.read_dataset(traindata, truncate=5)
-    eds = model.read_dataset(evaldata, truncate=5)
+    tp = model.TrainParams(
+        num_of_examples=arguments.pop('num_of_examples'),
+        train_batch_size=arguments.pop('train_batch_size'))
 
-    wf_linear_classification(tds, eds, output_dir)
+    # Prepare dataset
+    tds = model.read_dataset(traindata, tp.train_batch_size)
+    eds = model.read_dataset(evaldata, tp.eval_batch_size, ModeKeys.EVAL, tp.num_of_eval_examples)
+
+    wf_linear_classification(tds, eds, output_dir, tp)
 
 if __name__ == "__main__":
     main()
