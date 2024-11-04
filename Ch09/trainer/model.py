@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple, Any, Dict, List
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.data.ops.map_op import _MapDataset
 from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, CategoricalColumn, IndicatorColumn
@@ -140,13 +141,19 @@ def get_feature_columns() -> Tuple[Dict[str, NumericColumn], Dict[str, Categoric
 
     return real, sparse
 
-def get_inputs(real: Dict[str, Any], sparse: Dict[str, Any]) -> Dict[str, tf.keras.layers.Input]:
+def get_inputs(
+        real: Dict[str, Any],
+        sparse: Dict[str, Any],
+        with_embedding: bool,
+        num_of_buckets: int) -> Dict[str, tf.keras.layers.Input]:
     """
     Instantiate Keras tensors
 
     See
     https://keras.io/api/layers/core_layers/input/
 
+    :param num_of_buckets:
+    :param with_embedding:
     :param real:
     :param sparse:
     :return:
@@ -160,6 +167,38 @@ def get_inputs(real: Dict[str, Any], sparse: Dict[str, Any]) -> Dict[str, tf.ker
     })
 
     LOGGER.info(f"Keys are {inputs.keys()}")
+
+    if with_embedding:
+        LOGGER.info("With embeddings")
+
+        latbuckets = np.linspace(20.0, 50.0, num_of_buckets).tolist() # USA
+        lonbuckets = np.linspace(-120.0, -70.0, num_of_buckets).tolist() # USA
+        disc = {}
+        disc.update({
+            f'd_{key}': tf.feature_column.bucketized_column(real[key], latbuckets) for key in ['dep_lat', 'arr_lat']
+        })
+
+        disc.update({
+            f'd_{key}': tf.feature_column.bucketized_column(real[key], lonbuckets) for key in ['dep_lon', 'arr_lon']
+        })
+
+        # Cross columns that make sense in combination
+        sparse['dep_loc'] = tf.feature_column.crossed_column(
+            [disc['d_dep_lat'], disc['d_dep_lon'], num_of_buckets * num_of_buckets])
+
+        sparse['arr_loc'] = tf.feature_column.crossed_column(
+            [disc['d_arr_lat'], disc['d_arr_lon'], num_of_buckets * num_of_buckets])
+
+        sparse['dep_arr'] = tf.feature_column.crossed_column(
+            [disc['dep_loc'], disc['arr_loc'], num_of_buckets ** 4])
+
+        # Embed all the sparse columns
+        embed = {
+            f'embed_{colname}': tf.feature_column.embedding_column(col, 10)
+                for colname, col in sparse.items()
+        }
+
+        real.update(embed)
 
     return inputs
 
