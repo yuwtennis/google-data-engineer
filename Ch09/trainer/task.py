@@ -102,7 +102,7 @@ def main():
     tp = model.TrainParams(
         num_of_examples=arguments.pop('num_of_examples'),
         train_batch_size=arguments.pop('train_batch_size'),
-        model_type=arguments.pop('func'),
+        model_type=model.ModelType(arguments.pop('func')),
         num_of_buckets=arguments.pop('num_of_buckets'))
 
     # Prepare dataset

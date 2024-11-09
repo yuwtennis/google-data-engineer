@@ -83,7 +83,6 @@ def read_dataset(
     :return:
     """
     def pop_features_and_label(features: Dict[str, Any]) -> Tuple[dict[str, Any], Any]:
-        print(features)
         label = features.pop(LABEL_COLUMN)
 
         return features, label
@@ -113,7 +112,7 @@ def find_label_avg(dataset: _MapDataset):
     """
     labels = dataset.map(lambda x,y: y)
     count, total = labels.reduce((0.0, 0.0), lambda state, y: (state[0]+1.0, state[1]+y))
-    print(total/count)
+    LOGGER.info(total/count)
 
 
 def get_feature_columns() -> Tuple[Dict[str, NumericColumn], Dict[str, CategoricalColumn]]:
