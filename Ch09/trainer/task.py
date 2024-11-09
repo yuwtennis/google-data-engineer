@@ -17,7 +17,7 @@ def wf_linear_classification(
         tp: model.TrainParams) -> None:
     """
 
-    :param train_params:
+    :param tp:
     :param tds:
     :param eds:
     :param output_dir:
@@ -25,7 +25,12 @@ def wf_linear_classification(
     """
     # Prepare features columns
     real, sparse = model.get_feature_columns()
-    inputs = model.get_inputs(real, sparse)
+    inputs = model.get_inputs(
+        real,
+        sparse,
+        tp.model_type,
+        tp.num_of_buckets
+        )
 
     # One hot encode the categorical column
     sparse = model.one_hot_encode(sparse)
@@ -47,25 +52,42 @@ def main():
 
     parser.add_argument('--traindata',
                         help='Training data file(s)',
+                        type=str,
                         required=True)
 
     parser.add_argument('--evaldata',
                         help='Eval data file(s)',
+                        type=str,
                         required=True)
 
     parser.add_argument('--output_dir',
                         help='Parent directory to output artifacts',
+                        type=str,
                         default=os.getcwd(),
                         required=False)
 
     parser.add_argument('--num_of_examples',
                         help='Batches',
+                        type=int,
                         default=1000000,
                         required=False)
 
     parser.add_argument('--train_batch_size',
                         help='Batches',
+                        type=int,
                         default=64,
+                        required=False)
+
+    parser.add_argument('--num_of_buckets',
+                        help='Number of bins to span for lon and lat when doing embedding',
+                        type=int,
+                        default=5,
+                        required=False)
+
+    parser.add_argument('--func',
+                        help='Function name to generate model. Available values are linear and embeddings',
+                        type=str,
+                        default='linear',
                         required=False)
 
     args = parser.parse_args()
@@ -79,7 +101,9 @@ def main():
 
     tp = model.TrainParams(
         num_of_examples=arguments.pop('num_of_examples'),
-        train_batch_size=arguments.pop('train_batch_size'))
+        train_batch_size=arguments.pop('train_batch_size'),
+        model_type=arguments.pop('func'),
+        num_of_buckets=arguments.pop('num_of_buckets'))
 
     # Prepare dataset
     tds = model.read_dataset(traindata, tp.train_batch_size)

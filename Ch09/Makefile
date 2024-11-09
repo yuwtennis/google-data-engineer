@@ -8,6 +8,7 @@ REPOS_NAME ?= custom-training
 TAG ?= $$(git rev-parse HEAD)
 CONTAINER_IMAGE_URI ?= $(REGION)-docker.pkg.dev/$(PROJECT_ID)/$(REPOS_NAME)/flights:$(TAG)
 MACHINE_TYPE ?= n2-standard-4
+FUNC ?= embeddings
 
 build:
 	docker build -t $(CONTAINER_IMAGE_URI) .
@@ -19,5 +20,5 @@ deploy:
 	gcloud ai custom-jobs create \
 	  --region=asia-northeast1 \
 	  --display-name=flights \
-	  --args=--traindata="$(TRAIN_DATA)",--evaldata="$(EVAL_DATA)",--output="$(OUTPUT_DIR)" \
+	  --args=--traindata="$(TRAIN_DATA)",--evaldata="$(EVAL_DATA)",--output="$(OUTPUT_DIR)",--func="$(FUNC)" \
 	  --worker-pool-spec=replica-count=1,machine-type=$(MACHINE_TYPE),container-image-uri=$(CONTAINER_IMAGE_URI)

@@ -1,6 +1,7 @@
 import dataclasses
 import logging
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Tuple, Any, Dict, List
 
@@ -62,6 +63,10 @@ CHECK_POINT_PATH = f"checkpoints/flights.cpt"
 MODEL_PATH = f'export/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
+
+class ModelType(Enum):
+    LINEAR = 'linear'
+    EMBEDDINGS = 'embeddings'
 
 def read_dataset(
         filename: str,
@@ -144,7 +149,7 @@ def get_feature_columns() -> Tuple[Dict[str, NumericColumn], Dict[str, Categoric
 def get_inputs(
         real: Dict[str, Any],
         sparse: Dict[str, Any],
-        with_embedding: bool,
+        model_type: ModelType,
         num_of_buckets: int) -> Dict[str, tf.keras.layers.Input]:
     """
     Instantiate Keras tensors
@@ -153,7 +158,7 @@ def get_inputs(
     https://keras.io/api/layers/core_layers/input/
 
     :param num_of_buckets:
-    :param with_embedding:
+    :param model_type:
     :param real:
     :param sparse:
     :return:
@@ -168,7 +173,7 @@ def get_inputs(
 
     LOGGER.info(f"Keys are {inputs.keys()}")
 
-    if with_embedding:
+    if model_type == ModelType.EMBEDDINGS:
         LOGGER.info("With embeddings")
 
         latbuckets = np.linspace(20.0, 50.0, num_of_buckets).tolist() # USA
@@ -268,6 +273,8 @@ class TrainParams:
     """
     num_of_examples: int
     train_batch_size: int
+    num_of_buckets: int
+    model_type: ModelType
 
     # Automatically set
     num_of_epochs: int = dataclasses.field(init=False)
