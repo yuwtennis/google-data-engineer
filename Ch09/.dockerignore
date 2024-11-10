@@ -1,0 +1,12 @@
+*.iml
+tests/
+flights/
+data/
+poetry.toml
+poetry.lock
+Makefile
+config.yaml
+pyproject.toml
+README.md
+.mypy.ini
+.pylintrc
