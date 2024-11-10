@@ -188,13 +188,13 @@ def get_inputs(
 
         # Cross columns that make sense in combination
         sparse['dep_loc'] = tf.feature_column.crossed_column(
-            [disc['d_dep_lat'], disc['d_dep_lon'], num_of_buckets * num_of_buckets])
+            [disc['d_dep_lat'], disc['d_dep_lon']], num_of_buckets * num_of_buckets)
 
         sparse['arr_loc'] = tf.feature_column.crossed_column(
-            [disc['d_arr_lat'], disc['d_arr_lon'], num_of_buckets * num_of_buckets])
+            [disc['d_arr_lat'], disc['d_arr_lon']], num_of_buckets * num_of_buckets)
 
         sparse['dep_arr'] = tf.feature_column.crossed_column(
-            [disc['dep_loc'], disc['arr_loc'], num_of_buckets ** 4])
+            [sparse['dep_loc'], sparse['arr_loc']], num_of_buckets ** 4)
 
         # Embed all the sparse columns
         embed = {
