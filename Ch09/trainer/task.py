@@ -2,41 +2,48 @@
 import argparse
 import logging
 import os
+from typing import Dict
 
+from tensorflow.keras.layers import Input
 from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
+from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, IndicatorColumn
 
+from trainer.model import ModelType, DNN_HIDDEN_UNITS
 from . import model
 
 
-def wf_linear_classification(
+def run_train(
+        inputs: Dict[str, Input],
+        real: Dict[str, NumericColumn],
+        sparse: Dict[str, IndicatorColumn],
         tds: _MapDataset,
         eds: _MapDataset,
         output_dir: str,
         tp: model.TrainParams) -> None:
     """
+    Run training
 
-    :param tp:
-    :param tds:
-    :param eds:
+    :param inputs:
+    :param real:
+    :param sparse:
+    :param tds: Training dataset
+    :param eds: Evaluation dataset
     :param output_dir:
+    :param tp: Train params
     :return:
     """
-    # Prepare features columns
-    real, sparse = model.get_feature_columns()
-    inputs = model.get_inputs(
-        real,
-        sparse,
-        tp.model_type,
-        tp.num_of_buckets
-        )
-
-    # One hot encode the categorical column
-    sparse = model.one_hot_encode(sparse)
-
     # Prepare model
     md = model.ModelFactory.new_linear_classifier(
-        inputs, list(real.values()), list(sparse.values()))
+            inputs,
+            list(real.values()),
+            list(sparse.values())) if tp.model_type == ModelType.LINEAR \
+        else (
+        model.ModelFactory.new_wide_and_deep_classifier(
+            inputs,
+            list(real.values()),
+            list(sparse.values()),
+            DNN_HIDDEN_UNITS))
 
     # Train
     h, tm = model.TrainJobs.train(tds, eds, md, output_dir, tp)
@@ -119,7 +126,19 @@ def main():
     eds = model.read_dataset(
         evaldata, tp.eval_batch_size, ModeKeys.EVAL, tp.num_of_eval_examples)
 
-    wf_linear_classification(tds, eds, output_dir, tp)
+    # Prepare features columns
+    real, sparse = model.get_feature_columns()
+    inputs = model.get_inputs(
+        real,
+        sparse,
+        tp.model_type,
+        tp.num_of_buckets
+    )
+
+    # One hot encode the categorical column
+    sparse = model.one_hot_encode(sparse)
+
+    run_train(inputs, real, sparse, tds, eds, output_dir, tp)
 
 if __name__ == "__main__":
     main()

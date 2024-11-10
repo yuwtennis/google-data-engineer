@@ -35,6 +35,7 @@ DEFAULTS = [
     [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
     ['na'], [0.0], [0.0], [0.0], [0.0], ['na'], ['na']
 ]
+DNN_HIDDEN_UNITS=[64, 32]
 
 REAL_COLS = ('dep_delay,'
              'taxiout,'
@@ -259,6 +260,36 @@ class ModelFactory:
 
         model = tf.keras.Model(inputs, output)
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', calc_rmse])
+
+        return model
+
+    @staticmethod
+    def new_wide_and_deep_classifier(
+            inputs: Dict[str, tf.keras.layers.Input],
+            linear_feature_columns: List[NumericColumn],
+            dnn_feature_columns: List[IndicatorColumn],
+            dnn_hidden_units: List[int]
+    ):
+        """
+
+        :param inputs:
+        :param linear_feature_columns:
+        :param dnn_feature_columns:
+        :param dnn_hidden_units:
+        :return:
+        """
+        deep = tf.keras.layers.DenseFeatures(
+            dnn_feature_columns, name='deep_inputs')(inputs)
+        layers = [int(x) for x in dnn_hidden_units]
+        for layerno, numnodes in enumerate(layers):
+            deep = tf.keras.layers.Dense(numnodes, activation='relu', name=f'dnn_{layerno+1}')(deep)
+        wide = tf.keras.layers.DenseFeatures(linear_feature_columns, name='wide_inputs')(inputs)
+        both = tf.keras.layers.concatenate([deep, wide], name='both')
+        output = tf.keras.layers.Dense(1, activation='sigmoid', name='pred')(both)
+        model = tf.keras.Model(inputs, output)
+        model.compile(optimizer='adam',
+                      loss='binary_crossentropy',
+                      metrics=['accuracy', calc_rmse])
 
         return model
 
