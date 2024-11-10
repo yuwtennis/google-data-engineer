@@ -22,3 +22,7 @@ deploy:
 	  --display-name=flights \
 	  --args=--traindata="$(TRAIN_DATA)",--evaldata="$(EVAL_DATA)",--output="$(OUTPUT_DIR)",--func="$(FUNC)" \
 	  --worker-pool-spec=replica-count=1,machine-type=$(MACHINE_TYPE),container-image-uri=$(CONTAINER_IMAGE_URI)
+
+test:
+	pylint trainer/
+	mypy trainer/
