@@ -6,7 +6,7 @@ import os
 from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 
-from trainer import model
+from . import model
 
 
 def wf_linear_classification(
@@ -105,7 +105,7 @@ def main():
     output_dir = arguments.pop('output_dir')
 
     # Set logging
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
 
     tp = model.TrainParams(
         num_of_examples=arguments.pop('num_of_examples'),
