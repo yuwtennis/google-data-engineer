@@ -6,7 +6,7 @@ import os
 from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 
-from trainer import model
+from . import model
 
 
 def wf_linear_classification(
