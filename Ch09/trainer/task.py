@@ -1,5 +1,5 @@
+""" """
 import argparse
-import dataclasses
 import logging
 import os
 
@@ -85,9 +85,16 @@ def main():
                         required=False)
 
     parser.add_argument('--func',
-                        help='Function name to generate model. Available values are linear and embeddings',
+                        help='Function name to generate model. '
+                             'Available values are linear and embeddings',
                         type=str,
                         default='linear',
+                        required=False)
+
+    parser.add_argument('--truncate',
+                        help='Number of lines to take from csv file. Mainly for testing purpose.',
+                        type=int,
+                        default=None,
                         required=False)
 
     args = parser.parse_args()
@@ -106,13 +113,12 @@ def main():
         num_of_buckets=arguments.pop('num_of_buckets'))
 
     # Prepare dataset
-    tds = model.read_dataset(traindata, tp.train_batch_size)
+    tds = model.read_dataset(traindata, tp.train_batch_size, ModeKeys.TRAIN, arguments.pop('truncate'))
     eds = model.read_dataset(evaldata, tp.eval_batch_size, ModeKeys.EVAL, tp.num_of_eval_examples)
 
     wf_linear_classification(tds, eds, output_dir, tp)
 
 if __name__ == "__main__":
     main()
-
 
 
