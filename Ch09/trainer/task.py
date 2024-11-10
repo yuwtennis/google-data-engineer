@@ -1,4 +1,4 @@
-""" """
+""" Entry point module """
 import argparse
 import logging
 import os
@@ -6,8 +6,7 @@ import os
 from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 
-import model
-from model import ModelFactory, TrainJobs
+from trainer import model
 
 
 def wf_linear_classification(
@@ -36,18 +35,20 @@ def wf_linear_classification(
     sparse = model.one_hot_encode(sparse)
 
     # Prepare model
-    md = ModelFactory.new_linear_classifier(inputs, list(real.values()), list(sparse.values()))
+    md = model.ModelFactory.new_linear_classifier(
+        inputs, list(real.values()), list(sparse.values()))
 
     # Train
-    h, tm = TrainJobs.train(tds, eds, md, output_dir, tp)
+    h, tm = model.TrainJobs.train(tds, eds, md, output_dir, tp)
 
     # Eval
-    TrainJobs.eval(h)
+    model.TrainJobs.eval(h)
 
     # Save
-    TrainJobs.save(tm, output_dir)
+    model.TrainJobs.save(tm, output_dir)
 
 def main():
+    """ Main function """
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--traindata',
@@ -94,7 +95,7 @@ def main():
     parser.add_argument('--truncate',
                         help='Number of lines to take from csv file. Mainly for testing purpose.',
                         type=int,
-                        default=None,
+                        default=0,
                         required=False)
 
     args = parser.parse_args()
@@ -113,12 +114,12 @@ def main():
         num_of_buckets=arguments.pop('num_of_buckets'))
 
     # Prepare dataset
-    tds = model.read_dataset(traindata, tp.train_batch_size, ModeKeys.TRAIN, arguments.pop('truncate'))
-    eds = model.read_dataset(evaldata, tp.eval_batch_size, ModeKeys.EVAL, tp.num_of_eval_examples)
+    tds = model.read_dataset(
+        traindata, tp.train_batch_size, ModeKeys.TRAIN, arguments.pop('truncate'))
+    eds = model.read_dataset(
+        evaldata, tp.eval_batch_size, ModeKeys.EVAL, tp.num_of_eval_examples)
 
     wf_linear_classification(tds, eds, output_dir, tp)
 
 if __name__ == "__main__":
     main()
-
-

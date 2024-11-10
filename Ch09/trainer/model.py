@@ -1,3 +1,4 @@
+""" Necessary tools for training """
 import dataclasses
 import logging
 from datetime import datetime, timezone
@@ -8,7 +9,8 @@ from typing import Tuple, Any, Dict, List
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.data.ops.map_op import _MapDataset
-from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, CategoricalColumn, IndicatorColumn
+from tensorflow.python.feature_column.feature_column_v2 import (
+    NumericColumn, CategoricalColumn, IndicatorColumn)
 from tensorflow.python.keras.callbacks import History
 
 CSV_COLUMNS = (
@@ -59,12 +61,13 @@ CARRIER_VOCAB_LIST = ('AS,'
                       'NK,'
                       'AA')
 
-CHECK_POINT_PATH = f"checkpoints/flights.cpt"
+CHECK_POINT_PATH = "checkpoints/flights.cpt"
 MODEL_PATH = f'export/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
 class ModelType(Enum):
+    """ Enum class defining Model types"""
     LINEAR = 'linear'
     EMBEDDINGS = 'embeddings'
 
@@ -72,7 +75,7 @@ def read_dataset(
         filename: str,
         batch_size: int = 512,
         mode: tf.estimator.ModeKeys = tf.estimator.ModeKeys.TRAIN,
-        truncate: int = None
+        truncate: int = 0
 )  -> _MapDataset:
     """
 
@@ -99,7 +102,7 @@ def read_dataset(
         dataset = dataset.repeat()
         dataset = dataset.shuffle(batch_size * 10)
     dataset = dataset.prefetch(1)
-    if truncate is not None:
+    if truncate > 0:
         dataset = dataset.take(truncate)
 
     return dataset
@@ -163,14 +166,16 @@ def get_inputs(
     :return:
     """
     inputs = {
-        col_name: tf.keras.layers.Input(name=col_name, shape=(), dtype='float32') for col_name in real.keys()
+        col_name: tf.keras.layers.Input(name=col_name, shape=(), dtype='float32')
+        for col_name in real.keys()
     }
 
     inputs.update({
-        col_name: tf.keras.layers.Input(name=col_name, shape=(), dtype='string') for col_name in sparse.keys()
+        col_name: tf.keras.layers.Input(name=col_name, shape=(), dtype='string')
+        for col_name in sparse.keys()
     })
 
-    LOGGER.info(f"Keys are {inputs.keys()}")
+    LOGGER.info("Keys are %s", inputs.keys())
 
     if model_type == ModelType.EMBEDDINGS:
         LOGGER.info("With embeddings")
@@ -179,11 +184,13 @@ def get_inputs(
         lonbuckets = np.linspace(-120.0, -70.0, num_of_buckets).tolist() # USA
         disc = {}
         disc.update({
-            f'd_{key}': tf.feature_column.bucketized_column(real[key], latbuckets) for key in ['dep_lat', 'arr_lat']
+            f'd_{key}': tf.feature_column.bucketized_column(real[key], latbuckets)
+            for key in ['dep_lat', 'arr_lat']
         })
 
         disc.update({
-            f'd_{key}': tf.feature_column.bucketized_column(real[key], lonbuckets) for key in ['dep_lon', 'arr_lon']
+            f'd_{key}': tf.feature_column.bucketized_column(real[key], lonbuckets)
+            for key in ['dep_lon', 'arr_lon']
         })
 
         # Cross columns that make sense in combination
@@ -225,9 +232,7 @@ def one_hot_encode(sparse: Dict[str, CategoricalColumn]) -> Dict[str, IndicatorC
     return {col: tf.feature_column.indicator_column(val) for col, val in sparse.items()}
 
 class ModelFactory:
-    """
-
-    """
+    """ Create new model using input parameters """
 
     @staticmethod
     def new_linear_classifier(
@@ -292,7 +297,7 @@ class TrainParams:
             self.num_of_eval_examples = None
 
 class TrainJobs:
-
+    """ Do training """
     @staticmethod
     def train(
             train_dataset: _MapDataset,
