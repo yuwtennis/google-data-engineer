@@ -294,7 +294,7 @@ class TrainParams:
         else:
             self.num_of_epochs = 10
             self.eval_batch_size = 10000
-            self.num_of_eval_examples = None
+            self.num_of_eval_examples = 0
 
 class TrainJobs:
     """ Do training """
