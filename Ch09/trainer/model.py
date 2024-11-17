@@ -3,6 +3,7 @@ import dataclasses
 import logging
 import pprint
 import uuid
+from datetime import timezone, datetime
 from enum import Enum
 from pathlib import Path
 from typing import Tuple, Any, Dict, List
@@ -66,7 +67,7 @@ CARRIER_VOCAB_LIST = ('AS,'
                       'AA')
 
 CHECK_POINT_PATH = f"checkpoints/{UUID}/flights.cpt"
-MODEL_PATH = f'export/{UUID}'
+MODEL_PATH = f'export/{UUID}/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
 LOGGER = logging.getLogger(__name__)
 
 class ModelType(Enum):
