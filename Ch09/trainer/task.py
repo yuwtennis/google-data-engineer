@@ -9,9 +9,8 @@ from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, IndicatorColumn
 
-from trainer.model import ModelType, DNN_HIDDEN_UNITS
+from trainer.model import ModelType
 from . import model
-
 
 def run_train(
         inputs: Dict[str, Input],
@@ -21,6 +20,8 @@ def run_train(
         eds: _MapDataset,
         output_dir: str,
         tp: model.TrainParams) -> None:
+    # pylint: disable=R0913
+    # pylint: disable=R0917
     """
     Run training
 
@@ -43,16 +44,20 @@ def run_train(
             inputs,
             list(real.values()),
             list(sparse.values()),
-            DNN_HIDDEN_UNITS))
+            tp.dnn_hidden_units))
 
     # Train
     h, tm = model.TrainJobs.train(tds, eds, md, output_dir, tp)
 
     # Eval
-    model.TrainJobs.eval(h)
+    hp_metric = model.TrainJobs.eval(h)
 
     # Save
     model.TrainJobs.save(tm, output_dir)
+
+    # Hyperparameter tuning
+    model.TrainJobs.hp_tuning(hp_metric)
+
 
 def main():
     """ Main function """
@@ -92,6 +97,12 @@ def main():
                         default=5,
                         required=False)
 
+    parser.add_argument('--dnn_hidden_units',
+                        help='Architecture of DNN part of wide-and-deep network',
+                        type=str,
+                        default='32,4',
+                        required=False)
+
     parser.add_argument('--func',
                         help='Function name to generate model. '
                              'Available values are linear and embeddings',
@@ -118,7 +129,8 @@ def main():
         num_of_examples=arguments.pop('num_of_examples'),
         train_batch_size=arguments.pop('train_batch_size'),
         model_type=model.ModelType(arguments.pop('func')),
-        num_of_buckets=arguments.pop('num_of_buckets'))
+        num_of_buckets=arguments.pop('num_of_buckets'),
+        dnn_hidden_units=arguments.pop('dnn_hidden_units').split(','))
 
     # Prepare dataset
     tds = model.read_dataset(

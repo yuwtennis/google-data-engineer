@@ -1,6 +1,7 @@
 """ Necessary tools for training """
 import dataclasses
 import logging
+import pprint
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -12,6 +13,7 @@ from tensorflow.python.data.ops.map_op import _MapDataset
 from tensorflow.python.feature_column.feature_column_v2 import (
     NumericColumn, CategoricalColumn, IndicatorColumn)
 from tensorflow.python.keras.callbacks import History
+import hypertune
 
 CSV_COLUMNS = (
     'ontime,'
@@ -35,7 +37,6 @@ DEFAULTS = [
     [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
     ['na'], [0.0], [0.0], [0.0], [0.0], ['na'], ['na']
 ]
-DNN_HIDDEN_UNITS=[64, 32]
 
 REAL_COLS = ('dep_delay,'
              'taxiout,'
@@ -306,10 +307,12 @@ class TrainParams:
     :ivar eval_batch_size:
     :ivar num_of_eval_examples:
     """
+    # pylint: disable=R0902
     num_of_examples: int
     train_batch_size: int
     num_of_buckets: int
     model_type: ModelType
+    dnn_hidden_units: List[int]
 
     # Automatically set
     num_of_epochs: int = dataclasses.field(init=False)
@@ -326,6 +329,12 @@ class TrainParams:
             self.num_of_epochs = 10
             self.eval_batch_size = 10000
             self.num_of_eval_examples = 0
+
+@dataclasses.dataclass
+class HyperParameterTuningMetric:
+    """ Hyperparameter tuning """
+    metric_name: str
+    metric_val: Any
 
 class TrainJobs:
     """ Do training """
@@ -363,21 +372,22 @@ class TrainJobs:
             callbacks=[cp_callback]
         )
 
+        LOGGER.info("Result %s", pprint.pformat(history.history))
         return history, model
 
     @staticmethod
-    def eval(history: History) -> None:
+    def eval(history: History) -> HyperParameterTuningMetric:
         """
         Evaluate and tune the hyperparameter
 
         :param history:
-        :return:
+        :return: final rmse
         """
 
-        final_rmse = history.history['val_calc_rmse'][-1]
+        final_rmse: float = history.history['val_calc_rmse'][-1]
         LOGGER.info('Final RMSE (Validation Calculated RMSE) = %s', final_rmse)
 
-        # TODO Hyperparameter tuning
+        return HyperParameterTuningMetric(metric_name="rmse", metric_val=final_rmse)
 
     @staticmethod
     def save(model: tf.keras.Model, output_dir: str = '.'):
@@ -392,3 +402,17 @@ class TrainJobs:
 
         LOGGER.info('Exporting to %s', str(p))
         tf.saved_model.save(model, str(p.absolute()))
+
+    @staticmethod
+    def hp_tuning(metric: HyperParameterTuningMetric) -> None:
+        """
+
+        :param metric:
+        :return:
+        """
+        hpt = hypertune.HyperTune()
+        hpt.report_hyperparameter_tuning_metric(
+            hyperparameter_metric_tag=metric.metric_name,
+            metric_value=metric.metric_val,
+            global_step=1
+        )

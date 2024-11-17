@@ -10,6 +10,7 @@ python = ">=3.10,<3.11"
 
 [tool.poetry.group.dev.dependencies]
 tensorflow = "~2.14.0"
+cloudml-hypertune = "~0.1.0.dev6"
 pylint = "~3.3.0"
 mypy = "~1.13.0"
 
