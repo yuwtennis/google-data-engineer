@@ -123,7 +123,7 @@ def main():
     output_dir = arguments.pop('output_dir')
 
     # Set logging
-    logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.info('Start training UUID: %s', UUID)
 

@@ -68,7 +68,6 @@ CARRIER_VOCAB_LIST = ('AS,'
 CHECK_POINT_PATH = f"checkpoints/{UUID}/flights.cpt"
 MODEL_PATH = f'export/{UUID}'
 LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 
 class ModelType(Enum):
     """ Enum class defining Model types"""
