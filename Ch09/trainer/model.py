@@ -2,7 +2,7 @@
 import dataclasses
 import logging
 import pprint
-from datetime import datetime, timezone
+import uuid
 from enum import Enum
 from pathlib import Path
 from typing import Tuple, Any, Dict, List
@@ -14,6 +14,8 @@ from tensorflow.python.feature_column.feature_column_v2 import (
     NumericColumn, CategoricalColumn, IndicatorColumn)
 from tensorflow.python.keras.callbacks import History
 import hypertune
+
+UUID = uuid.uuid1().hex
 
 CSV_COLUMNS = (
     'ontime,'
@@ -63,8 +65,8 @@ CARRIER_VOCAB_LIST = ('AS,'
                       'NK,'
                       'AA')
 
-CHECK_POINT_PATH = "checkpoints/flights.cpt"
-MODEL_PATH = f'export/{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}'
+CHECK_POINT_PATH = f"checkpoints/{UUID}/flights.cpt"
+MODEL_PATH = f'export/{UUID}'
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
@@ -72,6 +74,7 @@ class ModelType(Enum):
     """ Enum class defining Model types"""
     LINEAR = 'linear'
     EMBEDDINGS = 'embeddings'
+
 
 def read_dataset(
         filename: str,
@@ -358,6 +361,7 @@ class TrainJobs:
         """
 
         p = Path(f'{output_dir}/{CHECK_POINT_PATH}')
+        LOGGER.info("Save check points to %s", str(p.absolute()))
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
             str(p.absolute()),
             save_weights_only=True,

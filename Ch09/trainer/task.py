@@ -9,7 +9,7 @@ from tensorflow.estimator import ModeKeys
 from tensorflow.python.data.ops.map_op import _MapDataset
 from tensorflow.python.feature_column.feature_column_v2 import NumericColumn, IndicatorColumn
 
-from trainer.model import ModelType
+from trainer.model import ModelType, UUID
 from . import model
 
 def run_train(
@@ -124,6 +124,8 @@ def main():
 
     # Set logging
     logging.basicConfig(level=logging.ERROR)
+    logger = logging.getLogger(__name__)
+    logger.info('Start training UUID: %s', UUID)
 
     tp = model.TrainParams(
         num_of_examples=arguments.pop('num_of_examples'),
