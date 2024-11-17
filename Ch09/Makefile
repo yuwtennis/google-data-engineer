@@ -1,12 +1,12 @@
-REGION := $$(gcloud config get compute/region)
-PROJECT_ID := $$(gcloud config get core/project)
+REGION := $(shell gcloud config get compute/region)
+PROJECT_ID := $(shell gcloud config get core/project)
 BUCKET_NAME ?= $(PROJECT_ID)-jp
 TRAIN_DATA ?= /gcs/$(BUCKET_NAME)/flights/train.csv
 EVAL_DATA ?= /gcs/$(BUCKET_NAME)/flights/test.csv
 OUTPUT_DIR ?= /gcs/$(BUCKET_NAME)/flights/output/
 REPOS_NAME ?= custom-training
-TAG ?= $$(git rev-parse HEAD)
-CONTAINER_IMAGE_URI ?= $(REGION)-docker.pkg.dev/$(PROJECT_ID)/$(REPOS_NAME)/flights:$(TAG)
+TAG ?= $(shell git rev-parse HEAD)
+CONTAINER_IMAGE_URI ?= $(REGION)-docker.pkg.dev\/$(PROJECT_ID)\/$(REPOS_NAME)\/flights:$(TAG)
 MACHINE_TYPE ?= n2-standard-4
 FUNC ?= embeddings
 
@@ -26,3 +26,12 @@ deploy:
 test:
 	pylint trainer/
 	mypy trainer/
+
+hp-tuning:
+	cp hyperparameter.yaml hyperparameter.yaml.tmp ; \
+	sed -i "s/CONTAINER_IMAGE_URI/$(CONTAINER_IMAGE_URI)/"  hyperparameter.yaml.tmp ; \
+	gcloud ai hp-tuning-jobs create \
+		--region=asia-northeast1 \
+		--display-name=hp-tuning-flights \
+		--config=hyperparameter.yaml.tmp ; \
+	rm -v hyperparameter.yaml.tmp
