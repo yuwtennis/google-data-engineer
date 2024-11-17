@@ -1,27 +1,32 @@
-displayName: TestHpTuningJob
-maxTrialCount: 1
-parallelTrialCount: 1
+maxTrialCount: 15
+parallelTrialCount: 3
 studySpec:
   metrics:
     - metricId: rmse
       goal: MINIMIZE
   parameters:
+    - parameterId: traindata
+      categoricalValueSpec:
+        values: [ /gcs/elite-caster-125113-jp/flights/train.csv ]
+    - parameterId: evaldata
+      categoricalValueSpec:
+        values: [ /gcs/elite-caster-125113-jp/flights/test.csv ]
     - parameterId: train_batch_size
+      scaleType: UNIT_LOG_SCALE
       integerValueSpec:
         minValue: 16
         maxValue: 512
-        scaleType: UNIT_LOG_SCALE
     - parameterId: num_of_buckets
+      scaleType: UNIT_LINEAR_SCALE
       integerValueSpec:
         minValue: 5
         maxValue: 10
-        scaleType: UNIT_LINEAR_SCALE
     - parameterId: dnn_hidden_units
       categoricalValueSpec:
         values: ["64,16", "64,16,4", "64,64,64,8", "256,64,16"]
     - parameterId: func
       categoricalValueSpec:
-        - values: ["embeddings"]
+        values: ["embeddings"]
 trialJobSpec:
   workerPoolSpecs:
     - machineSpec:
