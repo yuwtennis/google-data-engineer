@@ -304,10 +304,10 @@ class TrainParams:
     Defines training parameters
 
     :ivar num_of_examples: Group of samples in a batch when read by make_csv_dataset
-    :ivar train_batch_size:
-    :ivar num_of_epochs:
-    :ivar eval_batch_size:
-    :ivar num_of_eval_examples:
+    :ivar train_batch_size: Number of examples for an epoch for training
+    :ivar num_of_epochs: Number of epochs
+    :ivar eval_batch_size: Number of examples for an epoch for validation
+    :ivar num_of_eval_examples: Number of neurons for each layer
     """
     # pylint: disable=R0902
     num_of_examples: int
