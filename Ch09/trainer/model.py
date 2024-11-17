@@ -281,6 +281,7 @@ class ModelFactory:
         :param dnn_hidden_units:
         :return:
         """
+        # TODO Check if keras supports adjusting learning rate
         deep = tf.keras.layers.DenseFeatures(
             dnn_feature_columns, name='deep_inputs')(inputs)
         layers = [int(x) for x in dnn_hidden_units]
