@@ -100,9 +100,8 @@ def main():
     # TODO Something suitable interface compatible with gcloud ai create
     parser.add_argument('--dnn_hidden_units',
                         help='Architecture of DNN part of wide-and-deep network',
-                        type=int,
-                        default=[32,4],
-                        nargs="*",
+                        type=str,
+                        default="32-4",
                         required=False)
 
     parser.add_argument('--func',
@@ -134,7 +133,7 @@ def main():
         train_batch_size=arguments.pop('train_batch_size'),
         model_type=model.ModelType(arguments.pop('func')),
         num_of_buckets=arguments.pop('num_of_buckets'),
-        dnn_hidden_units=arguments.pop('dnn_hidden_units').split("-"))
+        dnn_hidden_units=arguments.pop('dnn_hidden_units').split('-'))
 
     # Prepare dataset
     tds = model.read_dataset(
