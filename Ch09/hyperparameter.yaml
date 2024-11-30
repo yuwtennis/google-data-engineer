@@ -23,7 +23,7 @@ studySpec:
         maxValue: 10
     - parameterId: dnn_hidden_units
       categoricalValueSpec:
-        values: ["64,16", "64,16,4", "64,64,64,8", "256,64,16"]
+        values: ["64-16", "64-16-4", "64-64-64-8", "256-64-16"]
     - parameterId: func
       categoricalValueSpec:
         values: ["embeddings"]
