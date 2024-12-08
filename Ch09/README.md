@@ -23,14 +23,23 @@ This chapter uses Vertex AI to run custom training jobs.
 2. Pull dataset from `GCS`
 3. Save model and checkpoints to `GCS`
 
-## How to run a job
+## Tutorial
+
+## Run a training job
 
 ```shell
-export PROJECT_ID=$(gcloud config get core/project)
-export REGION=$(gcloud config get compute/region)
-export REPOS_NAME=custom-training
-export IMAGE_TAG=YOUR_IMAGE_TAG
-export CONTAINER_IMAGE_URI=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOS_NAME}/${IMAGE_TAG}
+poetry run make train
+```
 
-./create_job.sh
+## Get online prediction result
+
+1. Set path to service account JSON private key file
+```shell
+export GOOGLE_APPLICATION_CREDENTIALS=PATH_TO_YOUR_FILE
+```
+
+2. Run script
+
+```shell
+poetry run python3 scripts/get_online_prediction.py --location REGION_NAME --endpoint_id ENDPOINT_ID
 ```
