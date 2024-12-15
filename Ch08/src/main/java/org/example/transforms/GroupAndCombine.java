@@ -6,7 +6,9 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.example.Flight;
+import org.example.entities.Flight;
+
+import static org.example.entities.Flight.INPUTCOLS.*;
 
 public class GroupAndCombine {
 
@@ -15,11 +17,11 @@ public class GroupAndCombine {
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
 
-            if (f.getField("EVENT").equals("arrived")) {
-                String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
+            if (f.getField(EVENT).equals("arrived")) {
+                String key = f.getField(ORIGIN) + ":" + f.getDepartureHour();
                 // TAXI_OUT field was emtpy for  "departed"  events
-                Double value = (double)(f.getFieldAsFloat("DEP_DELAY")
-                        + f.getFieldAsFloat("TAXI_OUT"));
+                Double value = (double)(f.getFieldAsFloat(DEP_DELAY)
+                        + f.getFieldAsFloat(TAXI_OUT));
                 c.output(KV.of(key, value));
             }
         }

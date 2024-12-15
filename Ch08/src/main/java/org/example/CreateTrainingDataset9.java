@@ -31,15 +31,12 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Mean;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.ParDoWithSideInput;
 import org.example.transforms.ParsingIntoObjects;
@@ -49,6 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+import static org.example.entities.Flight.INPUTCOLS.*;
 
 public class CreateTrainingDataset9 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset9.class);
@@ -141,9 +140,9 @@ public class CreateTrainingDataset9 {
                           Flight f = c.element();
 
                           // Exclude events that has empty ARR_DELAY
-                          if(f.getField("EVENT").equals("arrived")){
-                              String key = f.getField("DEST");
-                              double value = f.getFieldAsFloat("ARR_DELAY");
+                          if(f.getField(EVENT).equals("arrived")){
+                              String key = f.getField(DEST);
+                              double value = f.getFieldAsFloat(ARR_DELAY);
                               c.output(KV.of(key, value));
                           }
                       }}))
@@ -157,7 +156,7 @@ public class CreateTrainingDataset9 {
                           String origin = null;
                           Flight f = c.element().newCopy();
                           try {
-                              origin = f.getField("ORIGIN");
+                              origin = f.getField(ORIGIN);
                               double depDelay =  c.sideInput(avgDepDelay).get(origin+":"+f.getDepartureHour());
                               f.setAvgDepartureDelay(origin == null ? 0 : (float) depDelay);
                               c.output(f);
@@ -175,7 +174,7 @@ public class CreateTrainingDataset9 {
 					  @ProcessElement
 					  public void processElement(ProcessContext c) {
 						  Flight f = c.element();
-						  String dest = f.getField("DEST");
+						  String dest = f.getField(DEST);
 						  c.output(KV.of(dest, f));
 					  }
 				  }));

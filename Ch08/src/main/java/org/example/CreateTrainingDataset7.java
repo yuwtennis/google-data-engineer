@@ -32,6 +32,7 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.MutatingTheFlightObject;
 import org.example.transforms.ParDoWithSideInput;
@@ -43,6 +44,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static org.example.entities.Flight.INPUTCOLS.*;
 
 public class CreateTrainingDataset7 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset7.class);
@@ -121,9 +124,9 @@ public class CreateTrainingDataset7 {
                       public void processElement(ProcessContext c) {
                           Flight f = c.element();
 
-                          if(f.getField("EVENT").equals("arrived")) {
-                              String key = f.getField("DEST");
-                              double value = f.getFieldAsFloat("ARR_DELAY");
+                          if(f.getField(EVENT).equals("arrived")) {
+                              String key = f.getField(DEST);
+                              double value = f.getFieldAsFloat(ARR_DELAY);
                               LOG.info("Dest {} , Arrival Delay {}", key, value);
                               c.output(KV.of(key, value));
                           }

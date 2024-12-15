@@ -1,12 +1,13 @@
 package org.example.transforms;
 
-import com.google.api.gax.rpc.InvalidArgumentException;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.example.Flight;
+import org.example.entities.Flight;
 
 import java.util.Map;
+
+import static org.example.entities.Flight.INPUTCOLS.FL_DATE;
 
 
 public class ParDoWithSideInput {
@@ -32,7 +33,7 @@ public class ParDoWithSideInput {
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
-            String date = f.getField("FL_DATE");
+            String date = f.getField(FL_DATE);
             boolean isTrainDay = c.sideInput(this.trainView).containsKey(date);
 
             if(isTrainDay) {
@@ -56,7 +57,7 @@ public class ParDoWithSideInput {
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
-            String date = f.getField("FL_DATE");
+            String date = f.getField(FL_DATE);
 
             if(this.trainView == null) {
                 throw new Exception("Trainview is null");

@@ -1,4 +1,4 @@
-package org.example;
+package org.example.entities;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
@@ -16,7 +16,7 @@ public class Flight {
 
     private static final Logger LOG = LoggerFactory.getLogger(Flight.class);
 
-    private enum INPUTCOLS {
+    public enum INPUTCOLS {
         FL_DATE,OP_UNIQUE_CARRIER,OP_CARRIER_AIRLINE_ID,OP_CARRIER,OP_CARRIER_FL_NUM,
         ORIGIN_AIRPORT_ID,ORIGIN_AIRPORT_SEQ_ID,ORIGIN_CITY_MARKET_ID,ORIGIN,DEST_AIRPORT_ID,
         DEST_AIRPORT_SEQ_ID,DEST_CITY_MARKET_ID,DEST,CRS_DEP_TIME,DEP_TIME,DEP_DELAY,TAXI_OUT,
@@ -26,6 +26,10 @@ public class Flight {
     }
 
     private String[] fields;
+
+    // Definition from the book
+    // Avg Departure Delay: Average over the entire training dataset of the ORIGIN
+    // Avg Arrival Delay: Average over the past 60 min in the case of arrival delay at the DEST
     private float avgDepartureDelay, avgArrivalDelay;
 
     /**
@@ -129,8 +133,8 @@ public class Flight {
         return fields;
     }
 
-    public String getField(String fieldName) throws IllegalArgumentException {
-        return fields[INPUTCOLS.valueOf(fieldName).ordinal()] ;
+    public String getField(INPUTCOLS fieldName) throws IllegalArgumentException {
+        return fields[fieldName.ordinal()] ;
     }
 
     /**
@@ -169,7 +173,7 @@ public class Flight {
         String format = "yyyy-MM-dd HH:mm:ss";
 
         DateTimeZone tz = DateTimeZone.forOffsetHours(
-                getFieldAsFloat("DEP_AIRPORT_TZOFFSET")
+                getFieldAsFloat(INPUTCOLS.DEP_AIRPORT_TZOFFSET)
                         .intValue() / 3600);
 
         DateTimeFormatter fmt = DateTimeFormat
@@ -192,15 +196,10 @@ public class Flight {
      * @throws EnumConstantNotPresentException if the field name is not found in the INPUTCOLS enum.
      * @throws NumberFormatException if the value of the field cannot be parsed as a float.
      */
-    public Float getFieldAsFloat(String fieldName)
-            throws IllegalArgumentException, NullPointerException{
+    public Float getFieldAsFloat(INPUTCOLS fieldName){
         float fieldNum = 0f;
+        fieldNum = Float.parseFloat(fields[fieldName.ordinal()]);
 
-        try {
-            fieldNum = Float.parseFloat(fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
-        } catch (NumberFormatException e) {
-            Flight.LOG.error("Format error: {}", fields[INPUTCOLS.valueOf(fieldName).ordinal()]);
-        }
         return fieldNum;
     }
 

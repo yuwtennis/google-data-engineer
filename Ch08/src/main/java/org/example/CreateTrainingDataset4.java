@@ -7,6 +7,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.example.entities.Flight;
 import org.example.transforms.ParDoWithSideInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static org.example.entities.Flight.INPUTCOLS.FL_DATE;
 
 public class CreateTrainingDataset4 {
     private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset4.class);
@@ -56,7 +59,7 @@ public class CreateTrainingDataset4 {
                     @ProcessElement
                     public void processElement(ProcessContext c) {
                         Flight f = c.element();
-                        LOG.info(f.getField("FL_DATE"));
+                        LOG.info(f.getField(FL_DATE));
                     }
                 }));
 

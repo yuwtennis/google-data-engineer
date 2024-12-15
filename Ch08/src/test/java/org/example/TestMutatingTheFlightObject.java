@@ -5,6 +5,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.MutatingTheFlightObject;
 import org.example.transforms.ParsingIntoObjects;
@@ -14,8 +15,6 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class TestMutatingTheFlightObject {
     public final transient TestPipeline tp = TestPipeline.create();

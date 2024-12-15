@@ -8,6 +8,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.ParsingIntoObjects;
 import org.junit.Before;
@@ -15,6 +16,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.*;
+
+import static org.example.entities.Flight.INPUTCOLS.NOTIFY_TIME;
 
 public class TestGroupAndCombine {
     @Rule
@@ -37,7 +40,7 @@ public class TestGroupAndCombine {
                 .apply(
                         MapElements
                                 .into(TypeDescriptors.strings())
-                                .via((Flight flight) -> flight.getField("NOTIFY_TIME")));
+                                .via((Flight flight) -> flight.getField(NOTIFY_TIME)));
 
         PAssert.that(output)
                 .containsInAnyOrder(

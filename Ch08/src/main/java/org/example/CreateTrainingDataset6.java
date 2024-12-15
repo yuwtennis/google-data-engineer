@@ -21,6 +21,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.MutatingTheFlightObject;
 import org.example.transforms.ParsingIntoObjects;

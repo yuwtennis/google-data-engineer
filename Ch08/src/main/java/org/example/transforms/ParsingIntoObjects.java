@@ -4,7 +4,9 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.example.Flight;
+import org.example.entities.Flight;
+
+import static org.example.entities.Flight.INPUTCOLS.EVENT;
 
 public class ParsingIntoObjects {
 
@@ -23,10 +25,10 @@ public class ParsingIntoObjects {
         @ProcessElement
         public void processElement(ProcessContext c) {
             Flight f = c.element();
-            if (f.getField("EVENT").equals("departed")
+            if (f.getField(EVENT).equals("departed")
                     && f.isNotCancelled()) {
                 c.output(f);
-            } else if (f.getField("EVENT").equals("arrived")
+            } else if (f.getField(EVENT).equals("arrived")
                     && f.isNotDiverted() && f.isNotDiverted()  ) {
                 c.output(f);
             }

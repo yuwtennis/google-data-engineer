@@ -33,6 +33,7 @@ import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.*;
+import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.ParDoWithSideInput;
 import org.example.transforms.ParsingIntoObjects;
@@ -44,6 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Map;
+
+import static org.example.entities.Flight.INPUTCOLS.*;
 
 public class CreateTrainingDataset10 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset10.class);
@@ -184,9 +187,9 @@ public class CreateTrainingDataset10 {
                           Flight f = c.element();
 
                           // Exclude events that has empty ARR_DELAY
-                          if (f.getField("EVENT").equals("arrived")) {
-                              String key = f.getField("DEST");
-                              double value = f.getFieldAsFloat("ARR_DELAY");
+                          if (f.getField(EVENT).equals("arrived")) {
+                              String key = f.getField(DEST);
+                              double value = f.getFieldAsFloat(ARR_DELAY);
                               c.output(KV.of(key, value));
                           }
                    }}))
@@ -199,7 +202,7 @@ public class CreateTrainingDataset10 {
 					  @ProcessElement
 					  public void processElement(ProcessContext c) throws Exception {
                           Flight f = c.element().newCopy();
-                          String origin = f.getField("ORIGIN");
+                          String origin = f.getField(ORIGIN);
                           Double depDelay =  c.sideInput(avgDepDelay).get(origin+":"+f.getDepartureHour());
                           f.setAvgDepartureDelay((float) (depDelay == null ? 0 : depDelay));
                           c.output(f);
@@ -209,7 +212,7 @@ public class CreateTrainingDataset10 {
 					  @ProcessElement
 					  public void processElement(ProcessContext c) {
 						  Flight f = c.element();
-						  String dest = f.getField("DEST");
+						  String dest = f.getField(DEST);
 						  c.output(KV.of(dest, f));
 					  }
 				  }));
