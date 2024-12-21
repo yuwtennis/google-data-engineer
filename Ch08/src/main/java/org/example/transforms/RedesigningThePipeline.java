@@ -8,7 +8,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
-import org.example.entities.Flight;
+import org.example.Flight;
 
 public class RedesigningThePipeline {
     /***

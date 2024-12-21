@@ -1,14 +1,13 @@
 package org.example;
 
 
-import org.example.entities.Flight;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.example.entities.Flight.INPUTCOLS.DEP_DELAY;
-import static org.example.entities.Flight.INPUTCOLS.FL_DATE;
+import static org.example.Flight.INPUTCOLS.DEP_DELAY;
+import static org.example.Flight.INPUTCOLS.FL_DATE;
 import static org.junit.Assert.*;
 
 public class TestFlight {

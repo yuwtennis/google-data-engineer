@@ -6,9 +6,9 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.example.entities.Flight;
+import org.example.Flight;
 
-import static org.example.entities.Flight.INPUTCOLS.*;
+import static org.example.Flight.INPUTCOLS.*;
 
 public class GroupAndCombine {
 

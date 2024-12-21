@@ -2,12 +2,12 @@ package org.example.transforms;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.example.entities.Flight;
+import org.example.Flight;
 
 import java.util.Map;
 
-import static org.example.entities.Flight.INPUTCOLS.DEST;
-import static org.example.entities.Flight.INPUTCOLS.ORIGIN;
+import static org.example.Flight.INPUTCOLS.DEST;
+import static org.example.Flight.INPUTCOLS.ORIGIN;
 
 public class MutatingTheFlightObject {
 

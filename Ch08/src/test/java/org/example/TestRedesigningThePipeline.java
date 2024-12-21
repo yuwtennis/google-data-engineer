@@ -7,7 +7,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
-import org.example.entities.Flight;
 import org.example.transforms.RedesigningThePipeline;
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,7 +15,7 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
-import static org.example.entities.Flight.INPUTCOLS.DEST;
+import static org.example.Flight.INPUTCOLS.DEST;
 
 public class TestRedesigningThePipeline {
 

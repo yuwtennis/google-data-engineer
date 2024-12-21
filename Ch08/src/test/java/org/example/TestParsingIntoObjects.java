@@ -7,7 +7,6 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
-import org.example.entities.Flight;
 import org.example.transforms.ParsingIntoObjects;
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,7 +15,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.example.entities.Flight.INPUTCOLS.NOTIFY_TIME;
+import static org.example.Flight.INPUTCOLS.NOTIFY_TIME;
 
 public class TestParsingIntoObjects {
     private List<String> events;

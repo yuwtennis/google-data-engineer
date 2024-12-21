@@ -1,4 +1,4 @@
-package org.example.entities;
+package org.example;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;

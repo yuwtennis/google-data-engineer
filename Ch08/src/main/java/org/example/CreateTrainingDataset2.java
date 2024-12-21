@@ -25,7 +25,6 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.example.entities.Flight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

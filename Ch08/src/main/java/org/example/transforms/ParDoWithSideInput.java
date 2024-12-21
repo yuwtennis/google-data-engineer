@@ -3,11 +3,11 @@ package org.example.transforms;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.example.entities.Flight;
+import org.example.Flight;
 
 import java.util.Map;
 
-import static org.example.entities.Flight.INPUTCOLS.FL_DATE;
+import static org.example.Flight.INPUTCOLS.FL_DATE;
 
 
 public class ParDoWithSideInput {

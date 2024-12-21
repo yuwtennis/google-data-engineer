@@ -36,7 +36,6 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.example.entities.Flight;
 import org.example.transforms.GroupAndCombine;
 import org.example.transforms.ParDoWithSideInput;
 import org.example.transforms.ParsingIntoObjects;
@@ -47,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static org.example.entities.Flight.INPUTCOLS.*;
+import static org.example.Flight.INPUTCOLS.*;
 
 public class CreateTrainingDataset9 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset9.class);

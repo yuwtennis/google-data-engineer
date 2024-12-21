@@ -4,9 +4,9 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.example.entities.Flight;
+import org.example.Flight;
 
-import static org.example.entities.Flight.INPUTCOLS.EVENT;
+import static org.example.Flight.INPUTCOLS.EVENT;
 
 public class ParsingIntoObjects {
 
