@@ -51,5 +51,3 @@ deploy:
 		--region=asia-northeast1 \
 		--display-name=flights \
 		--model=$(MODEL_ID) \
-
-
