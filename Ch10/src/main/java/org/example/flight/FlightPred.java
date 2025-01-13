@@ -1,5 +1,7 @@
 package org.example.flight;
 
+import com.google.api.services.bigquery.model.TableRow;
+import com.google.bigtable.v2.Mutation;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.example.prediction.Prediction;
@@ -7,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
+
+import static org.example.flight.models.BigQuery.FLIGHTBQTYPES;
 
 @DefaultCoder(AvroCoder.class)
 public class FlightPred {
@@ -50,19 +54,28 @@ public class FlightPred {
      */
     private static double decideOntime(Flight f, double probability) {
         double ontime = ONTIME_DEFAULT;
-        if(f.isNotCancelled() && f.isNotDiverted()) {
-          if(f.isArrivedEvent()) {
-              // After arrival
-              ontime = f.getFieldAsFloat(Flight.INPUTCOLS.ARR_DELAY) < 15 ? 1 : 0;
-          } else {
-              // At wheelsoff
-              ontime = probability;
-          }
+
+        if (f.isNotCancelled() && f.isNotDiverted()) {
+            if (f.isArrivedEvent()) {
+                // After arrival
+                ontime = f.getFieldAsFloat(Flight.INPUTCOLS.ARR_DELAY) < 15 ? 1 : 0;
+            } else {
+                // At wheelsoff
+                ontime = probability;
+            }
         } else {
             // At departure
             ontime = probability;
         }
 
+        return ontime;
+    }
+
+    public Flight getFlight() {
+        return flight;
+    }
+
+    public double getOntime() {
         return ontime;
     }
 }

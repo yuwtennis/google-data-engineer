@@ -23,8 +23,8 @@ import java.util.Map;
 
 import static org.example.flight.delays.AvgDepartureDelayReferer.lookupOriginDepDelay;
 
-public class RealTimePipeline {
-    private static final Logger LOG = LoggerFactory.getLogger(RealTimePipeline.class);
+public class App {
+    private static final Logger LOG = LoggerFactory.getLogger(App.class);
 
     public interface MyOptions extends PipelineOptions {
 
@@ -37,13 +37,13 @@ public class RealTimePipeline {
         String getOutput();
         void setOutput(String s);
 
+        @Description("Google ProjectId used to access external service to apache beam")
+        String getGoogleProjectId();
+        void setGoogleProjectId(String s);
+
         @Description("Departure delay dataset")
         String getDepartureDelayCsvPath();
         void setDepartureDelayCsvPath(String s);
-
-        @Description("AI Platform Project Id")
-        String getAiPlatformProjectId();
-        void setAiPlatformProjectId(String s);
 
         @Description("AI Platform Location")
         String getAiPlatformLocation();
@@ -52,10 +52,17 @@ public class RealTimePipeline {
         @Description("AI Platform EndpointId")
         String getAiPlatformEndpointId();
         void setAiPlatformEndpointId(String s);
+
+        @Description("BigTable instance ID")
+        String getBigtableInstanceId();
+        void setBigtableInstanceId(String s);
+
+        @Description("Bigtable table ID")
+        String getBigtableTableId();
+        void setBigtableTableId(String s);
     }
 
     public static void main(String[] args) {
-
         MyOptions options = PipelineOptionsFactory
                 .fromArgs(args)
                 .withValidation()

@@ -44,7 +44,7 @@ import-model:
 		--region=asia-northeast1 \
 		--display-name=flights \
 		--container-image-uri=asia-docker.pkg.dev/vertex-ai-restricted/prediction/tf_opt-cpu.2-14:latest \
-		--artifact-uri=gs://$(BUCKET_NAME)/flights/output/export/4d5ea344aa3511ef8b8f42010a6e0007/20241124-072537/
+		--artifact-uri=$(GS_ARTIFACT_URI)
 
 deploy:
 	gcloud ai endpoints deploy-model $(ENDPOINT) \

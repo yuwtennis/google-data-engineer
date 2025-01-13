@@ -40,6 +40,6 @@ public class FlightRepository {
                 " WHERE FL_DATE <= '" + expectedEventDate + "'" +
                 " AND (EVENT = '" + Events.WHEELSOFF.toString().toLowerCase() + "'" +
                 " OR EVENT = '" + Events.DEPARTED.toString().toLowerCase() +"'" +
-                " OR EVENT = '" + Events.ARRIVED.toString().toLowerCase() +"')";
+                " OR EVENT = '" + Events.ARRIVED.toString().toLowerCase() +"') LIMIT 1000";
     }
 }
