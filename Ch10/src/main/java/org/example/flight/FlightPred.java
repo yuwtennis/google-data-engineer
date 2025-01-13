@@ -1,16 +1,12 @@
 package org.example.flight;
-
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.bigtable.v2.Mutation;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.example.prediction.Prediction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 
-import static org.example.flight.models.BigQuery.FLIGHTBQTYPES;
 
 @DefaultCoder(AvroCoder.class)
 public class FlightPred {

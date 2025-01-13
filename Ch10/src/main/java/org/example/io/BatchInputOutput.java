@@ -12,7 +12,7 @@ import org.example.flight.Flight;
 import org.example.flight.FlightPred;
 import org.example.flight.FlightRepository;
 import org.example.flight.models.BigQuery;
-import org.example.flight.models.BigTable;
+import org.example.flight.models.Bigtable;
 import org.example.flight.specifications.SuccessfulFlightSpec;
 
 import org.example.prediction.PredictionHelper;
@@ -55,7 +55,7 @@ public class BatchInputOutput implements InputOutput{
                                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 
         // FIXME Should be used when doing streaming
-        fp.apply("ToMutation", ParDo.of(new BigTable.FlightPredToMutationFn()))
+        fp.apply("ToMutation", ParDo.of(new Bigtable.FlightPredToMutationFn()))
                 .apply("ToBigTable",
                         BigtableIO
                                 .write()

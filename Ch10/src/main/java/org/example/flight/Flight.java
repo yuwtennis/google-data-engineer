@@ -1,9 +1,9 @@
 package org.example.flight;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableSchema;
-import org.apache.beam.sdk.coders.AvroCoder;
+
+
 import org.apache.beam.sdk.coders.DefaultCoder;
+import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.example.flight.exceptions.EventMalformedException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -13,9 +13,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+
 
 
 @DefaultCoder(AvroCoder.class)
@@ -246,6 +245,14 @@ public class Flight {
         this.avgArrivalDelay = avgArrivalDelay;
     }
 
+    private DateTime asDateTime(String ts) {
+        DateTimeFormatter formatter = DateTimeFormat
+                .forPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(DateTimeZone.UTC);
+
+        return DateTime.parse(ts, formatter);
+    }
+
     /**
      * Returns NOTIFY_TIME as joda Instance object
      *
@@ -253,14 +260,16 @@ public class Flight {
      */
     public Instant getEventTimestamp() {
         String timestamp = fields[INPUTCOLS.NOTIFY_TIME.ordinal()];
-        DateTimeFormatter formatter = DateTimeFormat
-                .forPattern("yyyy-MM-dd HH:mm:ss")
-                .withZone(DateTimeZone.UTC);
-        DateTime dateTime = DateTime.parse(timestamp, formatter);
-        return dateTime.toInstant();
+        return asDateTime(timestamp).toInstant();
     }
 
+    /**
+     *
+     * @param fieldName
+     * @return
+     */
     public DateTime getFieldAsDateTime(INPUTCOLS fieldName) {
-        return DateTime.parse(fields[fieldName.ordinal()]);
+        String timestamp = fields[fieldName.ordinal()];
+        return asDateTime(timestamp);
     }
 }

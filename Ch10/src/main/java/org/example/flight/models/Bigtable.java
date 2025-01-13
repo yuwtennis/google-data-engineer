@@ -13,8 +13,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BigTable {
-    private static final Logger LOG = LoggerFactory.getLogger(BigTable.class);
+public class Bigtable {
+    private static final Logger LOG = LoggerFactory.getLogger(Bigtable.class);
     private static final String CF_FAMILY = "FL";
 
     /***
@@ -22,10 +22,10 @@ public class BigTable {
      * @param mutations
      * @param colName
      * @param colValue
-     * @param ts
+     * @param ts_in_micros
      */
     private static void addCell(
-            List<Mutation> mutations, String colName, String colValue, Long ts) {
+            List<Mutation> mutations, String colName, String colValue, Long ts_in_micros) {
         Mutation m = null;
         if (!colValue.isEmpty()) {
             m = Mutation
@@ -35,7 +35,7 @@ public class BigTable {
                                     .setColumnQualifier(ByteString.copyFromUtf8(colName))
                                     .setFamilyName(CF_FAMILY)
                                     .setValue(ByteString.copyFromUtf8(colValue))
-                                    .setTimestampMicros(ts)
+                                    .setTimestampMicros(ts_in_micros)
                     ).build();
             mutations.add(m);
         }
@@ -45,8 +45,8 @@ public class BigTable {
         @ProcessElement
         public void processElement(ProcessContext c) {
             FlightPred fp = c.element();
-            LOG.info("Creating mutations: {}", fp.toString());
-            Long ts = fp.getFlight().getEventTimestamp().getMillis();
+            Long ts_in_millis = fp.getFlight().getEventTimestamp().getMillis();
+            LOG.info("EventTimestamp: {}", fp.getFlight().getEventTimestamp().toString());
             String key = fp.getFlight().getField(Flight.INPUTCOLS.ORIGIN)
                     + "#" + fp.getFlight().getField(Flight.INPUTCOLS.DEST)
                     + "#" + fp.getFlight().getField(Flight.INPUTCOLS.OP_CARRIER)
@@ -62,7 +62,7 @@ public class BigTable {
                         mutations,
                         col.toString(),
                         fp.getFlight().getField(col),
-                        ts
+                        ts_in_millis * 1000
                 );
             }
 
@@ -71,7 +71,7 @@ public class BigTable {
                         mutations,
                         "ONTIME",
                         new DecimalFormat("0.00").format(fp.getOntime()),
-                        ts
+                        ts_in_millis
                 );
             }
 
