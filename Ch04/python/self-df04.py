@@ -75,7 +75,7 @@ def as_utc(date, hhmm, tzone):
             return '', 0 # empty strings corresponds to canceled flights
     except ValueError as e:
         # If something is wrong ,ValueError will be raised from "datetime.datetiem.strptime"
-        print '{}.{}.{}'.format(date, hhmm, tzone)
+        print('{}.{}.{}'.format(date, hhmm, tzone))
 
         raise e
 
