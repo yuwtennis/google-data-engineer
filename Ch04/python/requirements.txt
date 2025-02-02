@@ -42,7 +42,7 @@ orjson==3.10.15
 packaging==24.2
 proto-plus==1.25.0
 protobuf==3.20.3
-pyarrow==5.0.0
+pyarrow==14.0.1
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pydot==1.4.2
