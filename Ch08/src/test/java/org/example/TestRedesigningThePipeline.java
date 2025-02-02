@@ -3,7 +3,6 @@ package org.example;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -13,9 +12,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static org.example.Flight.INPUTCOLS.DEST;
 
 public class TestRedesigningThePipeline {
 
@@ -28,7 +28,7 @@ public class TestRedesigningThePipeline {
                 public void processElement(ProcessContext c) {
                     Flight f = c.element().newCopy();
                     f.setAvgDepartureDelay(1.0f);
-                    String key = f.getField("DEST");
+                    String key = f.getField(DEST);
                     c.output(KV.of(key, f));
                 }
             }));
@@ -42,7 +42,7 @@ public class TestRedesigningThePipeline {
             return flight.apply("ToDepDelay", ParDo.of(new DoFn<Flight, KV<String, Double>>() {
                 @ProcessElement
                 public void processElement(ProcessContext c) {
-                    String key = c.element().getField("DEST");
+                    String key = c.element().getField(DEST);
                     Double value = 1.0;
                     c.output(KV.of(key, value));
                 }

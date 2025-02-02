@@ -6,6 +6,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.example.Flight.INPUTCOLS.DEP_DELAY;
+import static org.example.Flight.INPUTCOLS.FL_DATE;
 import static org.junit.Assert.*;
 
 public class TestFlight {
@@ -46,13 +48,7 @@ public class TestFlight {
     @Test
     public void TestGetField() {
         Flight f = Flight.fromCsv(this.validInput);
-        assertEquals("2018-01-02", f.getField("FL_DATE"));
-    }
-
-    @Test
-    public void TestGetFieldInvalidArgumentException() {
-        Flight f = Flight.fromCsv(this.validInput);
-        assertThrows(IllegalArgumentException.class, () -> f.getField("Blah"));
+        assertEquals("2018-01-02", f.getField(FL_DATE));
     }
 
     @Test
@@ -114,14 +110,7 @@ public class TestFlight {
     public void TestGetFieldsAsFloat() {
         Float expectedDepDelay = -4.0f;
         Flight f = Flight.fromCsv(this.validInput);
-        assertEquals(expectedDepDelay, f.getFieldAsFloat("DEP_DELAY"));
-    }
-
-    @Test
-    public void TestGetFieldsAsFloatThrowIllegalArgumentException() {
-        Flight f = Flight.fromCsv(this.validInput);
-        assertThrows(
-                IllegalArgumentException.class, () -> f.getFieldAsFloat("Blah"));
+        assertEquals(expectedDepDelay, f.getFieldAsFloat(DEP_DELAY));
     }
 
     @Test

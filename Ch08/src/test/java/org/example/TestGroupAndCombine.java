@@ -16,6 +16,8 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.example.Flight.INPUTCOLS.NOTIFY_TIME;
+
 public class TestGroupAndCombine {
     @Rule
     public final transient TestPipeline tp = TestPipeline.create();
@@ -37,7 +39,7 @@ public class TestGroupAndCombine {
                 .apply(
                         MapElements
                                 .into(TypeDescriptors.strings())
-                                .via((Flight flight) -> flight.getField("NOTIFY_TIME")));
+                                .via((Flight flight) -> flight.getField(NOTIFY_TIME)));
 
         PAssert.that(output)
                 .containsInAnyOrder(

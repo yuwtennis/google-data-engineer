@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.example.Flight.INPUTCOLS.NOTIFY_TIME;
+
 
 public class TestParDoWithSideInput {
     @Rule
@@ -61,7 +63,7 @@ public class TestParDoWithSideInput {
                                 ).withSideInputs(trainView))
                         .apply("ToNotifyDate", MapElements
                                 .into(TypeDescriptors.strings())
-                                .via((Flight f)->f.getField("NOTIFY_TIME")));
+                                .via((Flight f)->f.getField(NOTIFY_TIME)));
         PAssert.that(output).containsInAnyOrder("2018-01-02 03:32:00");
         tp.run();
     }
@@ -87,7 +89,7 @@ public class TestParDoWithSideInput {
                                 ).withSideInputs(trainView))
                         .apply("ToNotifyDate", MapElements
                                 .into(TypeDescriptors.strings())
-                                .via((Flight f)->f.getField("NOTIFY_TIME")));
+                                .via((Flight f)->f.getField(NOTIFY_TIME)));
         PAssert.that(output).containsInAnyOrder("2018-01-03 03:32:00");
         tp.run();
     }

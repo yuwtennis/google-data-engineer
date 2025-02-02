@@ -15,6 +15,8 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.example.Flight.INPUTCOLS.NOTIFY_TIME;
+
 public class TestParsingIntoObjects {
     private List<String> events;
 
@@ -37,7 +39,7 @@ public class TestParsingIntoObjects {
                 .apply(
                         MapElements
                                 .into(TypeDescriptors.strings())
-                                .via((Flight flight) -> flight.getField("NOTIFY_TIME")));
+                                .via((Flight flight) -> flight.getField(NOTIFY_TIME)));
 
         PAssert.that(output)
                 .containsInAnyOrder(

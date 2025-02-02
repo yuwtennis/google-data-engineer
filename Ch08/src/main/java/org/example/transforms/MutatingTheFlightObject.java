@@ -6,6 +6,9 @@ import org.example.Flight;
 
 import java.util.Map;
 
+import static org.example.Flight.INPUTCOLS.DEST;
+import static org.example.Flight.INPUTCOLS.ORIGIN;
+
 public class MutatingTheFlightObject {
 
 
@@ -21,13 +24,13 @@ public class MutatingTheFlightObject {
         public void processElement(ProcessContext c) throws Exception {
             if (this.delayType.equals("DEPARTURE")) {
                 Flight f = c.element().newCopy();
-                String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
+                String key = f.getField(ORIGIN) + ":" + f.getDepartureHour();
                 Double avgDepDelay = c.sideInput(this.avgDelay).get(key);
                 f.setAvgDepartureDelay((avgDepDelay == null) ? 0 : avgDepDelay.floatValue());
                 c.output(f);
             } else if(this.delayType.equals("ARRIVAL")) {
                 Flight f = c.element().newCopy();
-                String key = f.getField("DEST");
+                String key = f.getField(DEST);
                 Double avgArrDelay = c.sideInput(this.avgDelay).get(key);
                 f.setAvgArrivalDelay((avgArrDelay == null) ? 0 : avgArrDelay.floatValue());
                 c.output(f);

@@ -44,6 +44,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static org.example.Flight.INPUTCOLS.*;
+
 public class CreateTrainingDataset7 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset7.class);
   private static final String DELAY_TYPE_DEPARTURE = "DEPARTURE";
@@ -121,9 +123,9 @@ public class CreateTrainingDataset7 {
                       public void processElement(ProcessContext c) {
                           Flight f = c.element();
 
-                          if(f.getField("EVENT").equals("arrived")) {
-                              String key = f.getField("DEST");
-                              double value = f.getFieldAsFloat("ARR_DELAY");
+                          if(f.getField(EVENT).equals("arrived")) {
+                              String key = f.getField(DEST);
+                              double value = f.getFieldAsFloat(ARR_DELAY);
                               LOG.info("Dest {} , Arrival Delay {}", key, value);
                               c.output(KV.of(key, value));
                           }

@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static org.example.Flight.INPUTCOLS.FL_DATE;
+
 public class CreateTrainingDataset4 {
     private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset4.class);
 
@@ -56,7 +58,7 @@ public class CreateTrainingDataset4 {
                     @ProcessElement
                     public void processElement(ProcessContext c) {
                         Flight f = c.element();
-                        LOG.info(f.getField("FL_DATE"));
+                        LOG.info(f.getField(FL_DATE));
                     }
                 }));
 

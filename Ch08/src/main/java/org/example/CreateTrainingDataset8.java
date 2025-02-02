@@ -41,9 +41,9 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+
+import static org.example.Flight.INPUTCOLS.*;
 
 public class CreateTrainingDataset8 {
   private static final Logger LOG = LoggerFactory.getLogger(CreateTrainingDataset8.class);
@@ -136,9 +136,9 @@ public class CreateTrainingDataset8 {
                           Flight f = c.element();
 
                           // Exclude events that has empty ARR_DELAY
-                          if(f.getField("EVENT").equals("arrived")){
-                              String key = f.getField("DEST");
-                              double value = f.getFieldAsFloat("ARR_DELAY");
+                          if(f.getField(EVENT).equals("arrived")){
+                              String key = f.getField(DEST);
+                              double value = f.getFieldAsFloat(ARR_DELAY);
                               LOG.info("Dest {} , Arrival Delay {}", key, value);
                               c.output(KV.of(key, value));
                           }

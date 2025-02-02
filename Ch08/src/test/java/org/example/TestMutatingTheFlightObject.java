@@ -15,8 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-
 public class TestMutatingTheFlightObject {
     public final transient TestPipeline tp = TestPipeline.create();
     private List<String> events;

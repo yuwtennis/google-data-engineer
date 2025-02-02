@@ -8,6 +8,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.example.Flight;
 
+import static org.example.Flight.INPUTCOLS.*;
+
 public class GroupAndCombine {
 
     public static class AirportHourFn extends DoFn<Flight, KV<String, Double>> {
@@ -15,11 +17,11 @@ public class GroupAndCombine {
         public void processElement(ProcessContext c) throws Exception {
             Flight f = c.element();
 
-            if (f.getField("EVENT").equals("arrived")) {
-                String key = f.getField("ORIGIN") + ":" + f.getDepartureHour();
+            if (f.getField(EVENT).equals("arrived")) {
+                String key = f.getField(ORIGIN) + ":" + f.getDepartureHour();
                 // TAXI_OUT field was emtpy for  "departed"  events
-                Double value = (double)(f.getFieldAsFloat("DEP_DELAY")
-                        + f.getFieldAsFloat("TAXI_OUT"));
+                Double value = (double)(f.getFieldAsFloat(DEP_DELAY)
+                        + f.getFieldAsFloat(TAXI_OUT));
                 c.output(KV.of(key, value));
             }
         }
