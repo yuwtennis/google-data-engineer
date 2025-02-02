@@ -1,3 +1,15 @@
+
+### Notice
+
+On 2025.02.02 I went through with the book all the way to the end.  
+However, some topics were not implemented since the 1st edition of the book was out-dated and   
+there was no point to put cost into it. This repos will be archived.
+
+I will start new repository with 2nd edition and if you are interested , follow the new one.
+
+Thank you.
+@yuwtennis
+
 # google-data-engineer
 
 - [Overview](#overview)  
